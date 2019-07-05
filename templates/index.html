@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Колокольчик (co) - Time Code Detection </title>
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+</head>
+
+<body>
+<header class="navbar navbar-default">
+  <span class="navbar-text"> Time Code Detection
+      <a href="https://vk.com/datatraxer"> Колокольчик (co) </a>
+  </span>
+</header>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3">
+            <form action="/" method="post" enctype="multipart/form-data" class="image">
+                <label class="btn btn-default btn-file btn-lg">
+                    Browse <input <input type="file" name="video" style="display: none;">
+                </label>
+                <input type="submit" value="Upload your image" class="btn btn-primary btn-lg">
+                <div class="text-block-2 sucess-header" style="margin-top:18px;">
+                    {% if init %}
+                        {{ timecode }}
+                    {% endif %}
+                </div>
+            </form>
+            {% if init %}
+            <button class = "btn btn-danger btn-lg"> Распылить реагент </button>
+            {% endif %}
+        </div>
+        <div class="col-md-9">
+            {% if init %}
+                {{ timecode }}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+
+
+</body>
+</html>
