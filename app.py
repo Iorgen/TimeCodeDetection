@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request
 from flask_restful import reqparse, abort, Api, Resource
-from model_inference import recognition
+from inference import recognition
 from train.augmentation import decode_predict_ctc
 import numpy as np
 import requests
@@ -12,11 +12,13 @@ from keras import backend as K
 
 VIDEO_FOLDER = os.path.join('static', 'video')
 IMAGE_FOLDER = os.path.join('static', 'image')
+WEIGHT_FILE = os.path.join('inference', 'weights', 'weights19.h5')
 app = Flask(__name__)
 api = Api(app)
 app.config['VIDEO_FOLDER'] = VIDEO_FOLDER
 app.config['IMAGE_FOLDER'] = IMAGE_FOLDER
-recognizer = recognition.Recognizer()
+app.config['WEIGHT_FILE'] = WEIGHT_FILE
+recognizer = recognition.Recognizer(app.config['WEIGHT_FILE'])
 global graph
 graph = tf.get_default_graph()
 
@@ -61,18 +63,19 @@ def recognition():
             net_out_value = recognizer.predict(expand_img)
             pred_texts = decode_predict_ctc(net_out_value)
 
-        timecodeClean = {
-            'hours': pred_texts[0],
-            'minutes': pred_texts[1],
-            'seconds': pred_texts[2]
-        }
+        print(pred_texts)
+        # timecodeClean = {
+        #     'hours': pred_texts[0],
+        #     'minutes': pred_texts[1],
+        #     'seconds': pred_texts[2]
+        # }
         success = False
 
     # TODO splitting function
     # TODO analyser that get early and later values and push them as output
     # TODO save time from and to indto video description (About)
 
-    return render_template("index.html", timecode=timecodeClean,  init=True)
+    return render_template("index.html", timecode=pred_texts,  init=True)
 
 
 if __name__ == '__main__':

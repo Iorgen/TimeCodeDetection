@@ -4,3 +4,5 @@ old_parts
 __pycache__
 static
 venv
+mask_rcnn_coco.h5
+Kangaroo
