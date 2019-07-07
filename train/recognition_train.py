@@ -7,6 +7,7 @@ import cv2
 import keras.callbacks
 import numpy as np
 import matplotlib.pyplot as plt
+from core.loss_func import ctc_lambda_func
 from matplotlib import pylab
 from random import randint, randrange
 from glob import glob
@@ -21,7 +22,7 @@ from keras.layers.recurrent import GRU
 OUTPUT_DIR = 'image_ocr'
 # character classes and matching regex filter
 regex = r'^[0-9]+$'
-# Character set for recognition
+# Character set for recognition # TODO remove to cofiguration file
 alphabet = u'0123456789:'
 # TODO refactor all import parts of code and delete redundant imports
 
@@ -54,7 +55,7 @@ def create_sequence_dataset():
     make_tarfile("wordlists.tgz", 'wordlists')
 
 
-def paint_text_cv(input_text, width, height, sample_image_path='../dataset/train_data/*jpg'):
+def paint_text_cv(input_text, width, height, sample_image_path='recognition_train_data/*jpg'):
     '''
     :param input_text:  text to be placed on the images
     :param width: ended width of generated images
@@ -288,16 +289,6 @@ class TextImageGenerator(keras.callbacks.Callback):
             self.build_word_list(8000, 11, 0.5)
 
 
-# the actual loss calc occurs here despite it not being
-# an internal Keras loss function
-def ctc_lambda_func(args):
-    y_pred, labels, input_length, label_length = args
-    # the 2 is critical here since the first couple outputs of the RNN
-    # tend to be garbage:
-    y_pred = y_pred[:, 2:, :]
-    return K.ctc_batch_cost(labels, y_pred, input_length, label_length)
-
-
 # For a real OCR application, this should be beam search with a dictionary
 # and language model.  For this example, best path is sufficient.
 def decode_batch(test_func, word_batch):
@@ -403,7 +394,7 @@ def train(run_name, start_epoch, stop_epoch):
     else:
         input_shape = (img_w, img_h, 1)
 
-    fdir = '../dataset'
+    fdir = 'recognition_dataset'
     img_gen = TextImageGenerator(monogram_file=os.path.join(fdir, 'wordlist_mono_clean.txt'),
                                  bigram_file=os.path.join(fdir, 'wordlist_bi_clean.txt'),
                                  minibatch_size=minibatch_size,

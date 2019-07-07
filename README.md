@@ -29,3 +29,7 @@ Train Recognition model via script in train folder
 add detection model name in config.json 
 
 add recognition model name in config.json 
+
+##  Deployment
+
+run static script creation using terminal command: ./static

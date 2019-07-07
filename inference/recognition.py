@@ -10,10 +10,13 @@ from keras.models import Model
 from keras.layers.recurrent import GRU
 from keras.optimizers import SGD
 from keras.utils.data_utils import get_file
-from train.augmentation import TextImageGenerator, ctc_lambda_func
+from core.loss_func import ctc_lambda_func
 
 
 def Recognizer(weight_file):
+    # TODO remove to cofiguration file
+    alphabet = u'0123456789:'
+    absolute_max_string_len = 16
     np.random.seed(55)
     # weight_file = 'inference/weights19.h5'
     img_w = 135
@@ -39,14 +42,14 @@ def Recognizer(weight_file):
     fdir = os.path.dirname(get_file('wordlists.tgz',
                                     origin='http://www.mythic-ai.com/datasets/wordlists.tgz', untar=True))
 
-    img_gen = TextImageGenerator(monogram_file=os.path.join(fdir, 'wordlist_mono_clean.txt'),
-                                 bigram_file=os.path.join(fdir, 'wordlist_bi_clean.txt'),
-                                 minibatch_size=minibatch_size,
-                                 img_w=img_w,
-                                 img_h=img_h,
-                                 downsample_factor=(pool_size ** 2),
-                                 val_split=words_per_epoch - val_words
-                                 )
+    # img_gen = TextImageGenerator(monogram_file=os.path.join(fdir, 'wordlist_mono_clean.txt'),
+    #                              bigram_file=os.path.join(fdir, 'wordlist_bi_clean.txt'),
+    #                              minibatch_size=minibatch_size,
+    #                              img_w=img_w,
+    #                              img_h=img_h,
+    #                              downsample_factor=(pool_size ** 2),
+    #                              val_split=words_per_epoch - val_words
+    #                              )
     act = 'relu'
     input_data = Input(name='the_input', shape=input_shape, dtype='float32')
     inner = Conv2D(conv_filters, kernel_size, padding='same',
@@ -75,12 +78,12 @@ def Recognizer(weight_file):
         gru1_merged)
 
     # transforms RNN output to character activations:
-    inner = Dense(img_gen.get_output_size(), kernel_initializer='he_normal',
+    inner = Dense(len(alphabet) + 1,  kernel_initializer='he_normal',
                   name='dense2')(concatenate([gru_2, gru_2b]))
     y_pred = Activation('softmax', name='softmax')(inner)
     Model(inputs=input_data, outputs=y_pred).summary()
 
-    labels = Input(name='the_labels', shape=[img_gen.absolute_max_string_len], dtype='float32')
+    labels = Input(name='the_labels', shape=[absolute_max_string_len], dtype='float32')
     input_length = Input(name='input_length', shape=[1], dtype='int64')
     label_length = Input(name='label_length', shape=[1], dtype='int64')
     # Keras doesn't currently support loss funcs with extra parameters
@@ -98,6 +101,5 @@ def Recognizer(weight_file):
     # captures output of softmax so we can decode the output during visualization
     test_func = K.function([input_data], [y_pred])
     model_p = Model(inputs=input_data, outputs=y_pred)
-    # model_p._make_predict_function()
     return model_p
 
