@@ -1,6 +1,4 @@
-import os
 import numpy as np
-import cv2
 from keras import backend as K
 from keras.layers.convolutional import Conv2D, MaxPooling2D
 from keras.layers import Input, Dense, Activation
@@ -9,12 +7,11 @@ from keras.layers.merge import add, concatenate
 from keras.models import Model
 from keras.layers.recurrent import GRU
 from keras.optimizers import SGD
-from keras.utils.data_utils import get_file
 from core.loss_func import ctc_lambda_func
 
 
 def Recognizer(weight_file):
-    # TODO remove to cofiguration file
+    # TODO remove all model specs variables into configuration file
     alphabet = u'0123456789:'
     absolute_max_string_len = 16
     np.random.seed(55)
@@ -39,17 +36,6 @@ def Recognizer(weight_file):
     else:
         input_shape = (img_w, img_h, 1)
 
-    fdir = os.path.dirname(get_file('wordlists.tgz',
-                                    origin='http://www.mythic-ai.com/datasets/wordlists.tgz', untar=True))
-
-    # img_gen = TextImageGenerator(monogram_file=os.path.join(fdir, 'wordlist_mono_clean.txt'),
-    #                              bigram_file=os.path.join(fdir, 'wordlist_bi_clean.txt'),
-    #                              minibatch_size=minibatch_size,
-    #                              img_w=img_w,
-    #                              img_h=img_h,
-    #                              downsample_factor=(pool_size ** 2),
-    #                              val_split=words_per_epoch - val_words
-    #                              )
     act = 'relu'
     input_data = Input(name='the_input', shape=input_shape, dtype='float32')
     inner = Conv2D(conv_filters, kernel_size, padding='same',
@@ -86,6 +72,7 @@ def Recognizer(weight_file):
     labels = Input(name='the_labels', shape=[absolute_max_string_len], dtype='float32')
     input_length = Input(name='input_length', shape=[1], dtype='int64')
     label_length = Input(name='label_length', shape=[1], dtype='int64')
+
     # Keras doesn't currently support loss funcs with extra parameters
     # so CTC loss is implemented in a lambda layer
     loss_out = Lambda(ctc_lambda_func, output_shape=(1,), name='ctc')([y_pred, labels, input_length, label_length])
@@ -99,7 +86,7 @@ def Recognizer(weight_file):
     model.compile(loss={'ctc': lambda y_true, y_pred: y_pred}, optimizer=sgd)
     model.load_weights(weight_file)
     # captures output of softmax so we can decode the output during visualization
-    test_func = K.function([input_data], [y_pred])
+    # test_func = K.function([input_data], [y_pred])
     model_p = Model(inputs=input_data, outputs=y_pred)
     return model_p
 
