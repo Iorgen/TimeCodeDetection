@@ -7,3 +7,5 @@ venv
 logs
 recognition_dataset
 detection_dataset
+videos
+det_set

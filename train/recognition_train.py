@@ -19,7 +19,7 @@ from keras.layers.merge import add, concatenate
 from keras.models import Model
 from keras.layers.recurrent import GRU
 
-OUTPUT_DIR = 'image_ocr'
+OUTPUT_DIR = 'logs'
 # character classes and matching regex filter
 regex = r'^[0-9]+$'
 # Character set for recognition # TODO remove to cofiguration file

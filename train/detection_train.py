@@ -25,6 +25,9 @@ ALPHA = 0.35
 GRID_SIZE = 7
 IMAGE_SIZE = 224
 
+IMAGE_HEIGHT = 360
+IMAGE_WIDTH = 640
+
 # first train with frozen weights, then fine tune
 TRAINABLE = False
 WEIGHTS = "model-0.64.h5"
@@ -60,10 +63,10 @@ class DataGenerator(Sequence):
                     row[i+1] = int(r)
                 # x0, y0  top-left corner and x1,y1 bottom-right corner
                 path, image_height, image_width, x0, y0, x1, y1, _, _ = row
-                imggg = cv2.imread(path)
-                cv2.rectangle(imggg, (x0, y0), (x1, y1), (0, 255, 0), 3)
-                pyplot.imshow(imggg)
-                pyplot.show()
+                # imggg = cv2.imread(path)
+                # cv2.rectangle(imggg, (x0, y0), (x1, y1), (0, 255, 0), 3)
+                # pyplot.imshow(imggg)
+                # pyplot.show()
                 self.boxes.append((path, x0, y0, x1, y1))
 
     def __len__(self):
@@ -106,8 +109,8 @@ class DataGenerator(Sequence):
                     x1 = min(x1 - start_x, img.width)
                     y1 = min(y1 - start_y, img.height)
 
-                    if np.abs(x1 - x0) < 5 or np.abs(y1 - y0) < 5:
-                        print("\nWarning: cropped too much (obj width {}, obj height {}, img width {}, img height {})\n".format(x1 - x0, y1 - y0, img.width, img.height))
+                    # if np.abs(x1 - x0) < 5 or np.abs(y1 - y0) < 5:
+                    #     print("\nWarning: cropped too much (obj width {}, obj height {}, img width {}, img height {})\n".format(x1 - x0, y1 - y0, img.width, img.height))
 
                 if self.rnd_flip:
                     elem = np.random.choice([0, 90, 180, 270, 1423, 1234])
@@ -370,6 +373,6 @@ def train():
                         verbose=1)
 
 
-train()
+# train()
 # if __name__ == "__main__":
 #     train()

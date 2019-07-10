@@ -30,6 +30,11 @@ add detection model name in config.json
 
 add recognition model name in config.json 
 
+put video samples directory "videos" in train folder
+
+run generate_detection_set.py
+
+
 ##  Deployment
 
 run static script creation using terminal command: ./static
