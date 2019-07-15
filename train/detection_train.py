@@ -18,7 +18,7 @@ from tensorflow.keras.utils import Sequence
 from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.backend import epsilon
 from tensorflow.keras.models import model_from_json
-
+# Mobile net only [96, 128, 160, 192, 224]
 # 0.35, 0.5, 0.75, 1.0
 ALPHA = 0.35
 
@@ -373,6 +373,6 @@ def train():
                         verbose=1)
 
 
-# train()
+train()
 # if __name__ == "__main__":
 #     train()

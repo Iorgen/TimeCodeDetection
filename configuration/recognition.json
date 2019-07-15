@@ -1,0 +1,16 @@
+{
+  "regex": "r'^[0-9]+$",
+  "alphabet": "0123456789:",
+  "absolute_max_string_len": 16,
+  "img_w": 135,
+  "img_h": 35,
+  "words_per_epoch": 16000,
+  "val_split": 0.2,
+  "conv_filters": 16,
+  "kernel_size":  [3,3],
+  "pool_size": 2,
+  "time_dense_size": 32,
+  "rnn_size": 512 ,
+  "minibatch_size": 32,
+  "model_weigths_dir" : "../inference/weights"
+}
