@@ -62,7 +62,7 @@ def get_tasks():
 
 @app.route('/', methods=['POST', 'GET'])
 def recognition():
-    results = dict()
+    pred_texts = list()
     count = 0
     # TODO No video error
     video = request.files['video']
@@ -81,20 +81,21 @@ def recognition():
         time_code_crops = det_prediction(image)
 
         for time_code in time_code_crops:
-            rec_prediction(time_code)
+            pred_texts.append(rec_prediction(time_code))
 
         # --------------------------------------------------------
         # TODO fix some bugs with png
-        pred_texts = rec_prediction(filename='some2.jpg')
-        print(pred_texts)
-        try:
-            # TODO write in log file all that stuff
-            pred_texts = pred_texts[0].split(':')
-        except Exception as e:
-            # TODO write in log file all that stuff
-            print(pred_texts, e)
+        # pred_texts = rec_prediction(filename='some2.jpg')
+        # print(pred_texts)
+        # try:
+        #     # TODO write in log file all that stuff
+        #     pred_texts = pred_texts[0].split(':')
+        # except Exception as e:
+        #     # TODO write in log file all that stuff
+        #     print(pred_texts, e)
 
-        success = False
+        if count == 3:
+            success = False
         count +=1
 
     # TODO analyser that get early and later values and push them as output
@@ -134,10 +135,15 @@ def det_prediction(image):
 
 
 # TODO change input signature on image type
-def rec_prediction(filename='nws.jpg'):
-    test_img_path = os.path.join(app.config['IMAGE_FOLDER'], filename)
-    img = cv2.imread(test_img_path, 0)
-    img = cv2.bitwise_not(img)
+def rec_prediction(image):
+    # test_img_path = os.path.join(app.config['IMAGE_FOLDER'], image)
+    # img = cv2.imread(test_img_path, 0)
+    # pyplot.imshow(image)
+    # pyplot.show()
+    # img = cv2.bitwise_not(image)
+    img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # pyplot.imshow(img)
+    # pyplot.show()
     img = cv2.resize(img, (135, 35))
     img = img.reshape(1, 35, 135)
     expand_img = np.expand_dims(img.T, axis=0)
