@@ -4,12 +4,13 @@ import glob
 from matplotlib import pyplot
 import numpy as np
 
-WEIGHTS_FILE = "model-0.23.h5"
+WEIGHTS_FILE = "model-0.18.h5"
 IMAGES = "detection_dataset/images/*jpg"
 IMAGE_SIZE = 224
 IOU_THRESHOLD = 0.5
 SCORE_THRESHOLD = 0.2
 MAX_OUTPUT_SIZE = 49
+
 
 def main():
     count = 0
@@ -50,6 +51,9 @@ def main():
             y1 = y0 + unscaled.shape[0] * h
 
             cv2.rectangle(unscaled, (int(x0), int(y0)), (int(x1), int(y1)), (0, 255, 0), 1)
+            crop_img = unscaled[int(y0):int(y1), int(x0):int(x1)]
+            pyplot.imshow(crop_img)
+            pyplot.show()
 
         pyplot.imshow(image)
         pyplot.show()

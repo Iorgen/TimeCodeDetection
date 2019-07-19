@@ -1,7 +1,6 @@
 import cv2
 import os
 import csv
-from glob import glob
 from matplotlib import pyplot
 from random import randint, choice, uniform
 TEXT_FOLDER = 'recognition_dataset'
@@ -11,7 +10,6 @@ SPLIT_RATIO = 0.8
 COLOR_SET = [(20, 20, 20), (160, 160, 160), (230, 230, 230)]
 # Two color mode
 COLOR_SET = [(20, 20, 20), (230, 230, 230)]
-
 # TODO upload another fonts and generate text based on them
 FONT_SET = [0, 1, 2, 3, 4, 5, 6, 7, 16]
 
@@ -29,7 +27,7 @@ def generate_images(images_dir = None, video_sample_path='1st.mp4', debug=False)
         # Set characteristics of text
         font = choice(FONT_SET)
         font_color = choice(COLOR_SET)
-        font_scale = round(uniform(1.5, 2), 1)
+        font_scale = round(uniform(2.5, 3), 1)
         line_thickness = 2
 
         # Take a frame from video recording
@@ -60,11 +58,11 @@ def generate_images(images_dir = None, video_sample_path='1st.mp4', debug=False)
                     line_thickness)
 
         # Compute bounding box coordinates for neural network education
-        x0 = text_x_coordinate - 4
-        x1 = text_x_coordinate + text_width + 4
+        x0 = text_x_coordinate - 7
+        x1 = text_x_coordinate + text_width + 7
 
-        y0 = text_y_coordinate - text_height - 4
-        y1 = text_y_coordinate + 4
+        y0 = text_y_coordinate - text_height - 7
+        y1 = text_y_coordinate + 7
 
         img_file_name = "_sample%d.jpg" % count
         cv2.imwrite(os.path.join(dirName, img_file_name), image)
@@ -73,9 +71,6 @@ def generate_images(images_dir = None, video_sample_path='1st.mp4', debug=False)
         if font_color == (20, 20, 20):
             class_name = 'black'
             class_target = 2
-        # if font_color == (160, 160, 160):
-        #     class_name = 'gray'
-        #     class_target = 1
         if font_color == (230, 230, 230):
             class_name = 'white'
             class_target = 0
@@ -93,7 +88,7 @@ def generate_images(images_dir = None, video_sample_path='1st.mp4', debug=False)
             cv2.rectangle(image, (int(x0), int(y0)), (int(x1), int(y1)), (0, 255, 0), 1)
             pyplot.imshow(image)
             pyplot.show()
-            if count > 10:
+            if count > 2:
                 success = False
 
     # preserve percentage of samples for each class ("stratified")
@@ -149,5 +144,5 @@ if __name__ == '__main__':
     else:
         print("Dataset directory:", dirName, " already exists")
 
-    generate_images(images_dir=dirName, video_sample_path='videos/sample2.mp4', debug=True)
+    generate_images(images_dir=dirName, video_sample_path='videos/VIRAT_S_000002_sizesmall.mp4', debug=False)
 

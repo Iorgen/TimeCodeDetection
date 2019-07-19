@@ -1,13 +1,10 @@
 import csv
 import math
 import os
-# understand code - remove after investigation
-import cv2
-from matplotlib import pyplot
-
 import numpy as np
 import tensorflow as tf
 from PIL import Image, ImageDraw, ImageEnhance
+from core.detection_model import init_detection_model
 from tensorflow.keras import Model
 from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau, Callback
@@ -17,7 +14,6 @@ from tensorflow.keras.regularizers import l2
 from tensorflow.keras.utils import Sequence
 from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.backend import epsilon
-from tensorflow.keras.models import model_from_json
 # Mobile net only [96, 128, 160, 192, 224]
 # 0.35, 0.5, 0.75, 1.0
 ALPHA = 0.35
@@ -291,6 +287,7 @@ def create_model(trainable=False):
 
     return model
 
+
 def detection_loss():
     def get_box_highest_percentage(arr):
         shape = tf.shape(arr)
@@ -341,7 +338,7 @@ def detection_loss():
 
 
 def train():
-    model = create_model(trainable=TRAINABLE)
+    model = init_detection_model(trainable=TRAINABLE)
     model.summary()
 
     if TRAINABLE:
@@ -372,7 +369,6 @@ def train():
                         shuffle=True,
                         verbose=1)
 
-
-train()
+# train()
 # if __name__ == "__main__":
 #     train()

@@ -8,7 +8,7 @@ def Recognizer(weight_file):
         model_conf = json.load(f)
 
     model, input_data, y_pred = init_recognition_model(model_conf)
-    model.load_weights(weight_file)
+    # model.load_weights(weight_file)
     model = Model(inputs=input_data, outputs=y_pred)
     return model
 

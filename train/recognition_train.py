@@ -8,7 +8,7 @@ import json
 import keras.callbacks
 import numpy as np
 import matplotlib.pyplot as plt
-# from core.loss_func import ctc_lambda_func
+from random import randint, choice, uniform
 from matplotlib import pylab
 from random import randint, randrange
 from glob import glob
@@ -17,6 +17,12 @@ from core.recognition_model import init_recognition_model
 
 
 OUTPUT_DIR = 'logs'
+# Two color mode
+COLOR_SET = [(20, 20, 20), (230, 230, 230)]
+# TODO upload another fonts and generate text based on them
+FONT_SET = [0, 1, 2, 3, 4, 5, 6, 7, 16]
+
+
 with open('configuration/recognition.json', 'r') as f:
     model_conf = json.load(f)
     regex = model_conf['regex']
@@ -60,23 +66,26 @@ def paint_text_cv(input_text, width, height, sample_image_path='recognition_data
     :return: np.array()
     '''
 
-    font = cv2.FONT_ITALIC
+    # Set characteristics of text
+    font = choice(FONT_SET)
     bottom_left_corner = (7 + randint(-4, 4), 20 + randint(-5, 5))  # That parameter should be random set
-    font_scale = 0.7
-    font_color = 255
-    line_type = 2
+    font_scale = round(uniform(2.5, 3), 1)
+    font_color = choice(COLOR_SET)
+    line_thickness = 2
 
+    # choose random image from dataset directory
     imgs = glob(sample_image_path)
     img_num = randrange(len(imgs))
     img = cv2.imread(imgs[img_num], 0)
 
+    # print text on image
     cv2.putText(img,
                 input_text,
                 bottom_left_corner,
                 font,
                 font_scale,
                 font_color,
-                line_type)
+                line_thickness)
 
     img = cv2.resize(img, (width, height))
     return img.reshape(1, height, width)
