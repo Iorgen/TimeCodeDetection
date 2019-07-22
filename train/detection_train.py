@@ -1,19 +1,24 @@
+# TODO create individual requirements file for gpu support
 import csv
+import sys
+sys.path.append(sys.path[0] + "/..")
 import math
 import os
 import numpy as np
 import tensorflow as tf
 from PIL import Image, ImageDraw, ImageEnhance
 from core.detection_model import init_detection_model
-from tensorflow.keras import Model
-from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input
-from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau, Callback
-from tensorflow.keras.layers import *
-from tensorflow.keras.losses import binary_crossentropy
-from tensorflow.keras.regularizers import l2
-from tensorflow.keras.utils import Sequence
-from tensorflow.keras.optimizers import SGD
-from tensorflow.keras.backend import epsilon
+from keras.models import Model
+from keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input
+from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau, Callback
+# from tensorflow.keras.layers import *
+from keras.layers import *
+# tf.compat.v1.keras.layers.CuDNNGRU
+from keras.losses import binary_crossentropy
+from keras.regularizers import l2
+from keras.utils import Sequence
+from keras.optimizers import SGD
+from keras.backend import epsilon
 # Mobile net only [96, 128, 160, 192, 224]
 # 0.35, 0.5, 0.75, 1.0
 ALPHA = 0.35
@@ -369,6 +374,7 @@ def train():
                         shuffle=True,
                         verbose=1)
 
-# train()
 # if __name__ == "__main__":
-#     train()
+from tensorflow.python.client import device_lib
+print(device_lib.list_local_devices())
+train()

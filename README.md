@@ -1,40 +1,41 @@
 # Project for TimeCode video recognition 
 
-### using neural model from 
+### using neural models
+For Recognition
 ```
 https://github.com/Tony607/keras-image-ocr
 ```
-### in progress
+For detection 
+```
+Need link to github where i take that project
+```
 
-datasets links will be later 
+# Datasets links
+### Videos for detection dataset generation 
+http://dl.yf.io/bdd-data/bdd100k/video_parts/
+ftp://svr-ftp.eng.cam.ac.uk/pub/eccv/
 
-## Dependencies
+# Dependencies
+pip3 install -r requirements
+or 
+pip install -r requirements
 
-### install mask_rcnn
-
-git clone https://github.com/matterport/Mask_RCNN.git
-
-cd Mask_RCNN
-
-sudo ~/PycharmProjects/TimeCodeDetection/venv/bin/python3 setup.py install
-
-## Education  
+# Education  
 
 Create image dataset with annotations 
-
-Train Mask_RCNN model on image dataset for detection part 
-
+Train MobileNetV2 model on image dataset for detection part 
 Train Recognition model via script in train folder 
-
 add detection model name in config.json 
-
 add recognition model name in config.json 
-
 put video samples directory "videos" in train folder
-
 run generate_detection_set.py
 
 
-##  Deployment
+#  Deployment
 
+#### For linux 
 run static script creation using terminal command: ./static
+
+#### For windows
+not created yet
+

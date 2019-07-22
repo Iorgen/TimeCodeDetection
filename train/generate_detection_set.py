@@ -21,7 +21,7 @@ def generate_images(images_dir = None, video_sample_path='1st.mp4', debug=False)
     output = []
     count = 0
     vidcap = cv2.VideoCapture(video_sample_path)
-    vidcap.set(cv2.CAP_PROP_FPS, 10)
+    vidcap.set(cv2.CAP_PROP_FPS, 1)
     success = True
     while success:
         # Set characteristics of text
@@ -31,7 +31,7 @@ def generate_images(images_dir = None, video_sample_path='1st.mp4', debug=False)
         line_thickness = 2
 
         # Take a frame from video recording
-        vidcap.set(cv2.CAP_PROP_POS_MSEC, (count * 100 + 3000))  # added this line
+        vidcap.set(cv2.CAP_PROP_POS_MSEC, (count * 100 + 1000))  # added this line
         success, image = vidcap.read()
         if not success:
             break
@@ -88,7 +88,7 @@ def generate_images(images_dir = None, video_sample_path='1st.mp4', debug=False)
             cv2.rectangle(image, (int(x0), int(y0)), (int(x1), int(y1)), (0, 255, 0), 1)
             pyplot.imshow(image)
             pyplot.show()
-            if count > 2:
+            if count > 4:
                 success = False
 
     # preserve percentage of samples for each class ("stratified")
@@ -109,7 +109,7 @@ def generate_images(images_dir = None, video_sample_path='1st.mp4', debug=False)
     print("class {}: {} images".format(output[j - 1][-2], i))
     lengths.append(i)
 
-    with open(TRAIN_OUTPUT_FILE, "w") as train, open(VALIDATION_OUTPUT_FILE, "w") as validate:
+    with open(TRAIN_OUTPUT_FILE, "w", newline='') as train, open(VALIDATION_OUTPUT_FILE, "w", newline='') as validate:
         writer = csv.writer(train, delimiter=",")
         writer2 = csv.writer(validate, delimiter=",")
 
@@ -144,5 +144,7 @@ if __name__ == '__main__':
     else:
         print("Dataset directory:", dirName, " already exists")
 
-    generate_images(images_dir=dirName, video_sample_path='videos/VIRAT_S_000002_sizesmall.mp4', debug=False)
+    generate_images(images_dir=dirName, video_sample_path='detection_dataset/videos/01TP_extract.avi', debug=False)
+    print("generate complete successful")
+
 
