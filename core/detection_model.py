@@ -9,7 +9,16 @@ WEIGHT_DECAY = 0.0005
 ALPHA = 0.35
 
 
-def init_detection_model(trainable=False):
+def init_detection_model(model_conf, trainable=False):
+    """
+    :param trainable: using pretrained model configuration or not
+    :param model_conf: loaded from json configuration model scheme
+    :return:
+    """
+
+    IMAGE_SIZE = model_conf['IMAGE_SIZE']
+    WEIGHT_DECAY = model_conf['WEIGHT_DECAY']
+    ALPHA = model_conf['APLHA']
     model = MobileNetV2(input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3), include_top=False, alpha=ALPHA, weights="imagenet")
 
     for layer in model.layers:

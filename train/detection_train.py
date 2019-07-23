@@ -1,26 +1,29 @@
 # TODO create individual requirements file for gpu support
+import json
 import csv
 import sys
+# Windows only code ------------------
 sys.path.append(sys.path[0] + "/..")
+# ------------------------------------
 import math
 import os
 import numpy as np
 import tensorflow as tf
 from PIL import Image, ImageDraw, ImageEnhance
 from core.detection_model import init_detection_model
-from keras.models import Model
-from keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input
-from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau, Callback
-# from tensorflow.keras.layers import *
-from keras.layers import *
-# tf.compat.v1.keras.layers.CuDNNGRU
-from keras.losses import binary_crossentropy
-from keras.regularizers import l2
-from keras.utils import Sequence
-from keras.optimizers import SGD
-from keras.backend import epsilon
+from tensorflow.keras.models import Model
+from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau, Callback
+from tensorflow.keras.layers import *
+from tensorflow.keras.losses import binary_crossentropy
+from tensorflow.keras.regularizers import l2
+from tensorflow.keras.utils import Sequence
+from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.backend import epsilon
 # Mobile net only [96, 128, 160, 192, 224]
 # 0.35, 0.5, 0.75, 1.0
+
+# TODO Move configuration json
 ALPHA = 0.35
 
 GRID_SIZE = 7
@@ -31,7 +34,7 @@ IMAGE_WIDTH = 640
 
 # first train with frozen weights, then fine tune
 TRAINABLE = False
-WEIGHTS = "model-0.64.h5"
+WEIGHTS = "model-0.27.h5"
 
 EPOCHS = 200
 BATCH_SIZE = 32
@@ -45,6 +48,7 @@ THREADS = 1
 
 TRAIN_CSV = "train.csv"
 VALIDATION_CSV = "validation.csv"
+
 
 class DataGenerator(Sequence):
 
@@ -267,7 +271,7 @@ class Validation(Callback):
         print(" - val_iou: {} - val_mse: {}".format(iou, mse))
 
 def create_model(trainable=False):
-    model = MobileNetV2(input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3), include_top=False, alpha=ALPHA, weights="imagenet")
+    model = MobileNetV2(input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3), include_top=False, alpha=ALPHA, weights=None)
 
     for layer in model.layers:
         layer.trainable = trainable
@@ -343,7 +347,10 @@ def detection_loss():
 
 
 def train():
-    model = init_detection_model(trainable=TRAINABLE)
+    with open('../configuration/detection.json', 'r') as f:
+        model_conf = json.load(f)
+
+    model = init_detection_model(model_conf, trainable=TRAINABLE)
     model.summary()
 
     if TRAINABLE:
@@ -374,7 +381,4 @@ def train():
                         shuffle=True,
                         verbose=1)
 
-# if __name__ == "__main__":
-from tensorflow.python.client import device_lib
-print(device_lib.list_local_devices())
 train()

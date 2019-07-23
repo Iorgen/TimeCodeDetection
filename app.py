@@ -11,6 +11,10 @@ from inference import recognition
 from inference import detection
 from train.recognition_train import decode_predict_ctc
 from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input
+
+# For CPU support only
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 global graph
 graph = tf.get_default_graph()
 
@@ -23,7 +27,7 @@ MAX_OUTPUT_SIZE = 49
 VIDEO_FOLDER = os.path.join('static', 'video')
 IMAGE_FOLDER = os.path.join('static', 'image')
 RECOGNITION_WEIGHT_FILE = os.path.join('inference', 'weights', 'recognition',  'weights19.h5')
-DETECTION_WEIGHT_FILE = os.path.join('inference', 'weights', 'detection',  'model-0.18.h5')
+DETECTION_WEIGHT_FILE = os.path.join('inference', 'weights', 'detection',  'model-0.44.h5')
 app = Flask(__name__)
 api = Api(app)
 app.config['VIDEO_FOLDER'] = VIDEO_FOLDER
@@ -76,11 +80,13 @@ def recognition():
     vidcap.set(cv2.CAP_PROP_POS_MSEC, 10000)
     success = True
     while success:
-        vidcap.set(cv2.CAP_PROP_POS_MSEC, (count * 1000 + 10000))  # added this line
+        vidcap.set(cv2.CAP_PROP_POS_MSEC, (count * 1000 + 15000))  # added this line
         success, image = vidcap.read()
         time_code_crops = det_prediction(image)
 
         for time_code in time_code_crops:
+            crop_file_name = video_filename + str(count) + '.jpg'
+            cv2.imwrite(os.path.join(app.config['IMAGE_FOLDER'], crop_file_name), time_code)
             pred_texts.append(rec_prediction(time_code))
 
         # --------------------------------------------------------
@@ -93,15 +99,15 @@ def recognition():
         # except Exception as e:
         #     # TODO write in log file all that stuff
         #     print(pred_texts, e)
-
-        if count == 3:
+        # --------------------------------------------------------
+        if count == 10:
             success = False
         count +=1
 
     # TODO analyser that get early and later values and push them as output
-
     # TODO save time from and to indto video description (About)
-    os.remove(video_file_path)
+    # TODO windows bug deleting the file
+    # os.remove(video_file_path)
     return render_template("index.html", timecode=pred_texts,  init=True)
 
 

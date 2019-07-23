@@ -1,0 +1,6 @@
+{
+  "IMAGE_SIZE": 224,
+  "WEIGHT_DECAY": 0.0005,
+  "APLHA": 0.35,
+  "WEIGHTS": "model-0.27.h5"
+}

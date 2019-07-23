@@ -1,8 +1,8 @@
 from detection_train import *
 import cv2
-import glob
 from matplotlib import pyplot
 import numpy as np
+
 
 WEIGHTS_FILE = "model-0.18.h5"
 IMAGES = "detection_dataset/images/*jpg"
