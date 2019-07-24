@@ -7,9 +7,10 @@ from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_i
 from train.recognition_train import decode_predict_ctc
 from inference import recognition
 from inference import detection
+from core.singleton import Singleton
 
 
-class Controller():
+class TimeCodeController(metaclass=Singleton):
 
     def __init__(self):
         # TODO load from configuration
@@ -20,8 +21,8 @@ class Controller():
         self.MAX_OUTPUT_SIZE = 49
         self.RECOGNITION_WEIGHT_FILE = os.path.join('inference', 'weights', 'recognition',  'weights19.h5')
         self.DETECTION_WEIGHT_FILE = os.path.join('inference', 'weights', 'detection',  'model-0.44.h5')
-        self.VIDEO_FOLDER = os.path.join('static', 'video')
-        self.IMAGE_FOLDER = os.path.join('static', 'image')
+        self.VIDEO_FOLDER = os.path.join('app', 'static', 'video')
+        self.IMAGE_FOLDER = os.path.join('app', 'static', 'image')
         self.recognizer = recognition.Recognizer(self.RECOGNITION_WEIGHT_FILE)
         self.detector = detection.Detector(self.DETECTION_WEIGHT_FILE)
 
