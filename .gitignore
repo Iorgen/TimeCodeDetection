@@ -2,10 +2,14 @@ dataset
 old_parts
 .idea
 __pycache__
-static
+static/video
+static/image
 venv
 logs
 recognition_dataset
 detection_dataset
 videos
 det_set
+
+# SQLite databases
+*.sqlite

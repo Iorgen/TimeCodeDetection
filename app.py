@@ -2,15 +2,21 @@ import numpy as np
 import os
 import cv2
 import tensorflow as tf
-from random import randint
-from matplotlib import pyplot
 from datetime import datetime
-from flask import Flask, render_template, request, jsonify
-from flask_restful import reqparse, abort, Api
+
+from flask_bootstrap import Bootstrap
+from flask import Flask, render_template, request
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired
+from flask_wtf.file import FileField, FileRequired
+
+# ML packages
+from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input
+# Own packages
+from train.recognition_train import decode_predict_ctc
 from inference import recognition
 from inference import detection
-from train.recognition_train import decode_predict_ctc
-from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input
 
 # For CPU support only
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -28,8 +34,21 @@ VIDEO_FOLDER = os.path.join('static', 'video')
 IMAGE_FOLDER = os.path.join('static', 'image')
 RECOGNITION_WEIGHT_FILE = os.path.join('inference', 'weights', 'recognition',  'weights19.h5')
 DETECTION_WEIGHT_FILE = os.path.join('inference', 'weights', 'detection',  'model-0.44.h5')
+
+
+# -----------------------------------------------------------------------------------------
 app = Flask(__name__)
-api = Api(app)
+bootstrap = Bootstrap(app)
+
+
+# TODO Refactor the form
+class RequestForm(FlaskForm):
+    name = StringField('What is your name?', validators=[DataRequired()])
+    video = FileField(validators=[FileRequired()])
+    submit = SubmitField('Submit')
+
+
+app.config['SECRET_KEY'] = 'hard to guess string'
 app.config['VIDEO_FOLDER'] = VIDEO_FOLDER
 app.config['IMAGE_FOLDER'] = IMAGE_FOLDER
 app.config['RECOGNITION_WEIGHT_FILE'] = RECOGNITION_WEIGHT_FILE
@@ -38,78 +57,61 @@ recognizer = recognition.Recognizer(app.config['RECOGNITION_WEIGHT_FILE'])
 detector = detection.Detector(app.config['DETECTION_WEIGHT_FILE'])
 
 
-tasks = [
-    {
-        'id': 1,
-        'title': u'Buy groceries',
-        'description': u'Milk, Cheese, Pizza, Fruit, Tylenol',
-        'done': False
-    },
-    {
-        'id': 2,
-        'title': u'Learn Python',
-        'description': u'Need to find a good Python tutorial on the web',
-        'done': False
-    }
-]
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
 
 
-@app.route('/')
-def hello_world():
-    return render_template('index.html')
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template('500.html'), 500
 
 
-@app.route('/todo/api/v1.0/tasks', methods=['GET'])
-def get_tasks():
-    return jsonify({'tasks': tasks})
+@app.route('/user/<name>')
+def user(name):
+    return render_template('user.html', name=name)
 
 
 @app.route('/', methods=['POST', 'GET'])
 def recognition():
-    pred_texts = list()
-    count = 0
-    # TODO No video error
-    video = request.files['video']
-    video_filename = datetime.today().strftime('%Y-%m-%d') + video.filename
-    video_file_path = os.path.join(app.config['VIDEO_FOLDER'], video_filename)
-    print(video_filename)
-    video.save(video_file_path)
-    del video
-    vidcap = cv2.VideoCapture(video_file_path)
-    vidcap.set(cv2.CAP_PROP_FPS, 1)
-    vidcap.set(cv2.CAP_PROP_POS_MSEC, 10000)
-    success = True
-    while success:
-        vidcap.set(cv2.CAP_PROP_POS_MSEC, (count * 1000 + 15000))  # added this line
-        success, image = vidcap.read()
-        time_code_crops = det_prediction(image)
+    name = None
+    form = RequestForm()
+    if form.validate_on_submit():
+        name = form.name.data
+        video = form.video.data
+        pred_texts = list()
+        count = 0
+        # TODO No video error
+        # video = request.files['video']
+        video_filename = datetime.today().strftime('%Y-%m-%d') + video.filename
+        video_file_path = os.path.join(app.config['VIDEO_FOLDER'], video_filename)
+        print(video_filename)
+        video.save(video_file_path)
+        del video
+        vidcap = cv2.VideoCapture(video_file_path)
+        vidcap.set(cv2.CAP_PROP_FPS, 1)
+        vidcap.set(cv2.CAP_PROP_POS_MSEC, 10000)
+        success = True
+        while success:
+            vidcap.set(cv2.CAP_PROP_POS_MSEC, (count * 1000 + 15000))  # added this line
+            success, image = vidcap.read()
+            time_code_crops = det_prediction(image)
 
-        for time_code in time_code_crops:
-            crop_file_name = video_filename + str(count) + '.jpg'
-            cv2.imwrite(os.path.join(app.config['IMAGE_FOLDER'], crop_file_name), time_code)
-            pred_texts.append(rec_prediction(time_code))
+            for time_code in time_code_crops:
+                crop_file_name = video_filename + str(count) + '.jpg'
+                cv2.imwrite(os.path.join(app.config['IMAGE_FOLDER'], crop_file_name), time_code)
+                pred_texts.append(rec_prediction(time_code))
 
-        # --------------------------------------------------------
-        # TODO fix some bugs with png
-        # pred_texts = rec_prediction(filename='some2.jpg')
-        # print(pred_texts)
-        # try:
-        #     # TODO write in log file all that stuff
-        #     pred_texts = pred_texts[0].split(':')
-        # except Exception as e:
-        #     # TODO write in log file all that stuff
-        #     print(pred_texts, e)
-        # --------------------------------------------------------
-        if count == 10:
-            success = False
-        count +=1
+            if count == 3:
+                success = False
+            count +=1
 
-    # TODO analyser that get early and later values and push them as output
-    # TODO save time from and to indto video description (About)
-    # TODO windows bug deleting the file
-    # os.remove(video_file_path)
-    return render_template("index.html", timecode=pred_texts,  init=True)
-
+        # TODO analyser that get early and later values and push them as output
+        # TODO save time from and to indto video description (About)
+        # TODO windows bug deleting the file
+        os.remove(video_file_path)
+        return render_template("index.html", timecode=pred_texts, form=form, init=True)
+    return render_template('index.html', form=form)
 
 def det_prediction(image):
     with graph.as_default():

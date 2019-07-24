@@ -3,10 +3,6 @@ from tensorflow.keras import Model
 from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input
 from tensorflow.keras.layers import Conv2D, BatchNormalization, Activation
 from tensorflow.keras.regularizers import l2
-# TODO create configuration file as on recognition model
-IMAGE_SIZE = 224
-WEIGHT_DECAY = 0.0005
-ALPHA = 0.35
 
 
 def init_detection_model(model_conf, trainable=False):
@@ -30,7 +26,6 @@ def init_detection_model(model_conf, trainable=False):
     x = Conv2D(112, padding="same", kernel_size=3, strides=1, use_bias=False)(x)
     x = BatchNormalization()(x)
     x = Activation("relu")(x)
-
     x = Conv2D(5, padding="same", kernel_size=1, activation="sigmoid")(x)
 
     model = Model(inputs=model.input, outputs=x)
