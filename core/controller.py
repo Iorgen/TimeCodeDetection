@@ -39,17 +39,21 @@ class TimeCodeController(metaclass=Singleton):
         vidcap.set(cv2.CAP_PROP_POS_MSEC, 10000)
         success = True
         while success:
-            vidcap.set(cv2.CAP_PROP_POS_MSEC, (count * 1000 + 15000))  # added this line
-            success, image = vidcap.read()
-            time_code_crops = self.image_detection(image)
+            try:
+                vidcap.set(cv2.CAP_PROP_POS_MSEC, (count * 1000 + 20000))  # added this line
+                success, image = vidcap.read()
+                cv2.imwrite(os.path.join(self.IMAGE_FOLDER, video_filename + str(count) + '.jpg'), image)
+                time_code_crops = self.image_detection(image)
 
-            for time_code in time_code_crops:
-                crop_file_name = video_filename + str(count) + '.jpg'
-                cv2.imwrite(os.path.join(self.IMAGE_FOLDER, crop_file_name), time_code)
-                predictions[crop_file_name] = self.crop_recognition(time_code)
-
-            if count == 3:
+                for time_code in time_code_crops:
+                    crop_file_name = video_filename + str(count) + '.jpg'
+                    cv2.imwrite(os.path.join(self.IMAGE_FOLDER, crop_file_name), time_code)
+                    predictions[crop_file_name] = self.crop_recognition(time_code)
+            except Exception as e:
+                print(e)
                 success = False
+            # if count == 3:
+            #     success = False
             count += 1
 
         # TODO analyser that get early and later values and push them as output

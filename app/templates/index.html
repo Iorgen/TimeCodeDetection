@@ -3,28 +3,19 @@
 
 {% block title %}Videcam Helper{% endblock %}
 
-{% block page_content %}
-<div class="container">
-    <div class="row">
-        <div class="col-md-3">
-<!--            <form action="/" method="post" enctype="multipart/form-data" class="image">-->
-<!--                <label class="btn btn-default btn-file btn-lg">-->
-<!--                    Browse  <input type="file" name="video" style="display: none;">-->
-<!--                </label>-->
-<!--                <input type="submit" value="Upload your video" class="btn btn-primary btn-lg">-->
-
-<!--            </form>-->
-            {{ wtf.quick_form(form) }}
-        </div>
-        <div class="col-md-9">
-            This app help you to detect time code on your video and many usefull features also
-            <div class="text-block-2 sucess-header" style="margin-top:18px;">
-                    {% if init %}
-                        {% for item in timecode %}
-                            <li><p >{{ item }}</p></li>
-                        {% endfor %}
-                    {% endif %}
-            </div>
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        {{wtf.quick_form(form)}}
+    </div>
+    <div class="col-md-9">
+        This app help you to detect time code on your video and many usefull features also
+        <div class="text-block-2 sucess-header" style="margin-top:18px;">
+                {% if init %}
+                    {% for item in timecode %}
+                        <li><p >{{ item }}</p></li>
+                    {% endfor %}
+                {% endif %}
         </div>
     </div>
 </div>

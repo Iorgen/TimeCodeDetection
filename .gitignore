@@ -3,13 +3,12 @@ old_parts
 .idea
 __pycache__
 static/video
-static/image
 venv
 logs
 recognition_dataset
 detection_dataset
 videos
 det_set
-
+telegram_token
 # SQLite databases
 *.sqlite

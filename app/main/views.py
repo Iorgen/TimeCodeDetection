@@ -1,4 +1,4 @@
-from flask import render_template, session, redirect, url_for, current_app
+from flask import render_template, session, redirect, url_for, current_app, request
 from core.controller import TimeCodeController
 from .forms import RequestForm
 from . import main
@@ -15,3 +15,6 @@ def index():
         print(predictions)
         return render_template("results.html", predictions=predictions,  init=True)
     return render_template('index.html', form=form)
+
+
+# Telefram bot will working throw web hook, as example heroku
