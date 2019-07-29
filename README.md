@@ -39,3 +39,6 @@ run static script creation using terminal command: ./static
 #### For windows
 not created yet
 
+### 
+ffmpeg video codec should be install on your platform
+need install them to windows or to linux
