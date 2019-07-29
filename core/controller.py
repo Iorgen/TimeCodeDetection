@@ -1,5 +1,6 @@
 import cv2
 import os
+import json
 import tensorflow as tf
 import numpy as np
 from datetime import datetime
@@ -13,25 +14,31 @@ from core.singleton import Singleton
 class TimeCodeController(metaclass=Singleton):
 
     def __init__(self):
-        # TODO load from configuration
+        with open('configuration/recognition.json', 'r') as f:
+            self.recognition_model_conf = json.load(f)
+
+        with open('configuration/detection.json', 'r') as f:
+            self.detection_model_conf = json.load(f)
+
         self.graph = tf.get_default_graph()
-        self.IMAGE_SIZE = 224
-        self.IOU_THRESHOLD = 0.5
-        self.SCORE_THRESHOLD = 0.2
-        self.MAX_OUTPUT_SIZE = 49
-        self.RECOGNITION_WEIGHT_FILE = os.path.join('inference', 'weights', 'recognition',  'weights19.h5')
-        self.DETECTION_WEIGHT_FILE = os.path.join('inference', 'weights', 'detection',  'model-0.44.h5')
+        self.IMAGE_SIZE = self.detection_model_conf["IMAGE_SIZE"]
+        self.IOU_THRESHOLD = self.detection_model_conf["IOU_THRESHOLD"]
+        self.SCORE_THRESHOLD = self.detection_model_conf["SCORE_THRESHOLD"]
+        self.MAX_OUTPUT_SIZE = self.detection_model_conf["MAX_OUTPUT_SIZE"]
+        self.RECOGNITION_WEIGHT_FILE = os.path.join('inference', 'weights', 'recognition',
+                                                    self.recognition_model_conf["WEIGHTS"])
+        self.DETECTION_WEIGHT_FILE = os.path.join('inference', 'weights', 'detection',
+                                                  self.detection_model_conf["WEIGHTS"])
         self.VIDEO_FOLDER = os.path.join('app', 'static', 'video')
         self.IMAGE_FOLDER = os.path.join('app', 'static', 'image')
-        self.recognizer = recognition.Recognizer(self.RECOGNITION_WEIGHT_FILE)
-        self.detector = detection.Detector(self.DETECTION_WEIGHT_FILE)
+        self.recognizer = recognition.recognizer(self.recognition_model_conf)
+        self.detector = detection.detector(self.detection_model_conf)
 
     def video_recognition(self, video):
         predictions = {}
         count = 0
         video_filename = datetime.today().strftime('%Y-%m-%d') + video.filename
         video_file_path = os.path.join(self.VIDEO_FOLDER, video_filename)
-        print(video_filename)
         video.save(video_file_path)
         del video
         vidcap = cv2.VideoCapture(video_file_path)
@@ -70,7 +77,6 @@ class TimeCodeController(metaclass=Singleton):
             feat_scaled = preprocess_input(np.array(img, dtype=np.float32))
             self.detector.load_weights(self.DETECTION_WEIGHT_FILE)
             pred = np.squeeze(self.detector.predict(feat_scaled[np.newaxis, :]))
-            print(pred)
             height, width, y_f, x_f, score = [a.flatten() for a in np.split(pred, pred.shape[-1], axis=-1)]
             coords = np.arange(pred.shape[0] * pred.shape[1])
             y = (y_f + coords // pred.shape[0]) / (pred.shape[0] - 1)
@@ -82,7 +88,6 @@ class TimeCodeController(metaclass=Singleton):
                                                             self.IOU_THRESHOLD)
             selected_indices = tf.Session().run(selected_indices)
             for y_c, x_c, h, w, _ in boxes[selected_indices]:
-                print(h, w)
                 x0 = unscaled.shape[1] * (x_c - w / 2)
                 y0 = unscaled.shape[0] * (y_c - h / 2)
                 x1 = x0 + unscaled.shape[1] * w
@@ -94,6 +99,7 @@ class TimeCodeController(metaclass=Singleton):
 
     def crop_recognition(self, image):
         img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        img = cv2.bitwise_not(img)
         img = cv2.resize(img, (135, 35))
         img = img.reshape(1, 35, 135)
         expand_img = np.expand_dims(img.T, axis=0)

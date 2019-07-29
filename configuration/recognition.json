@@ -12,5 +12,6 @@
   "time_dense_size": 32,
   "rnn_size": 512 ,
   "minibatch_size": 32,
-  "model_weigths_dir" : "../inference/weights"
+  "model_weigths_dir" : "../inference/weights",
+  "WEIGHTS": "weights19.h5"
 }

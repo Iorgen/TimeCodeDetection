@@ -12,9 +12,8 @@
             <div class="text-block-2 sucess-header" style="margin-top:18px;">
                     {% if init %}
                         {% for key, value in predictions.items() %}
-                            <h1>Key: {{key}}</h1>
-                            <img src="{{ url_for('static/image', filename='{{key}}') }}"  alt="Logo" style="width:135px;">
-                            <h2>Value: {{value}}</h2>
+                                <img src="static/image/{{ key }}" alt="something wrong with image" style="width:405px;">
+                            <h2>TimeCode: {{value}}</h2>
                         {% endfor %}
                     {% endif %}
             </div>
