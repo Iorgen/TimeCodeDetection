@@ -53,6 +53,7 @@ def generate_images(images_dir=None, video_folder='videos', debug=False):
         output = []
     file_index = 0
     videos = glob.glob(os.path.join(DETECTION_FOLDER, video_folder, '*.mov'))
+    # videos = glob.glob(os.path.join(DETECTION_FOLDER, video_folder, '*.mp4'))
     for file in videos:
         print(file_index)
         try:
@@ -67,7 +68,7 @@ def generate_images(images_dir=None, video_folder='videos', debug=False):
                 rotate_angle = int(rotate_angle)
             except Exception as e:
                 rotate_angle = 360
-                continue
+                pass
             vidcap = cv2.VideoCapture(file)
             # vidcap.set(cv2.CAP_PROP_FPS, 1)
             success = True
@@ -75,7 +76,7 @@ def generate_images(images_dir=None, video_folder='videos', debug=False):
                 # Set characteristics of text
                 font = choice(FONT_SET)
                 font_color = choice(COLOR_SET)
-                font_scale = round(uniform(2.5, 3), 1)
+                font_scale = round(uniform(2, 3), 1)
                 line_thickness = 2
 
                 # Take a frame from video recording
@@ -160,7 +161,7 @@ def generate_images(images_dir=None, video_folder='videos', debug=False):
             i = 1
             last += 1
 
-    print("class {}: {} images".format(output[j - 1][-2], i))
+    # print("class {}: {} images".format(output[j - 1][-2], i))
     lengths.append(i)
 
     with open(TRAIN_OUTPUT_FILE, "w", newline='') as train, open(VALIDATION_OUTPUT_FILE, "w", newline='') as validate:

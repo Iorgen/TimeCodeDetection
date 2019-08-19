@@ -2,6 +2,8 @@
 import json
 import csv
 import sys
+from matplotlib import pyplot
+from keras.layers import Conv2D
 # Windows only code ------------------
 sys.path.append(sys.path[0] + "/..")
 # ------------------------------------
@@ -52,7 +54,7 @@ VALIDATION_CSV = "validation.csv"
 
 class DataGenerator(Sequence):
 
-    def __init__(self, csv_file, rnd_rescale=True, rnd_multiply=True, rnd_color=True, rnd_crop=True, rnd_flip=False, debug=False):
+    def __init__(self, csv_file, rnd_rescale=False, rnd_multiply=False, rnd_color=False, rnd_crop=False, rnd_flip=False, debug=False):
         self.boxes = []
         self.rnd_rescale = rnd_rescale
         self.rnd_multiply = rnd_multiply
@@ -68,10 +70,6 @@ class DataGenerator(Sequence):
                     row[i+1] = int(r)
                 # x0, y0  top-left corner and x1,y1 bottom-right corner
                 path, image_height, image_width, x0, y0, x1, y1, _, _ = row
-                # imggg = cv2.imread(path)
-                # cv2.rectangle(imggg, (x0, y0), (x1, y1), (0, 255, 0), 3)
-                # pyplot.imshow(imggg)
-                # pyplot.show()
                 self.boxes.append((path, x0, y0, x1, y1))
 
     def __len__(self):
@@ -212,7 +210,10 @@ class DataGenerator(Sequence):
                 draw.rectangle(((x0, y0), (x1, y1)), outline="green")
 
                 changed.save(os.path.join("__debug__", os.path.basename(path)))
-
+        #
+        # for image in batch_images:
+        #     pyplot.imshow(image)
+        #     pyplot.show()
         return batch_images, batch_boxes
 
 
@@ -269,6 +270,7 @@ class Validation(Callback):
         logs["val_mse"] = mse
 
         print(" - val_iou: {} - val_mse: {}".format(iou, mse))
+
 
 def create_model(trainable=False):
     model = MobileNetV2(input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3), include_top=False, alpha=ALPHA, weights=None)
@@ -380,5 +382,6 @@ def train():
                         # use_multiprocessing=MULTITHREADING,
                         shuffle=True,
                         verbose=1)
+
 
 train()

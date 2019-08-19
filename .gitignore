@@ -14,3 +14,4 @@ telegram_token
 # SQLite databases
 *.sqlite
 train_files
+*.csv
