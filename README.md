@@ -1,13 +1,13 @@
 # Project for TimeCode video recognition 
 
-### using neural models
+### using neural models, i modified that
 For Recognition
 ```
 https://github.com/Tony607/keras-image-ocr
 ```
 For detection 
 ```
-Need link to github where i take that project
+https://github.com/lars76/object-localization
 ```
 
 # Datasets links

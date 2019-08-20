@@ -14,7 +14,7 @@ def init_detection_model(model_conf, trainable=False):
 
     IMAGE_SIZE = model_conf['IMAGE_SIZE']
     WEIGHT_DECAY = model_conf['WEIGHT_DECAY']
-    ALPHA = model_conf['APLHA']
+    ALPHA = model_conf['ALPHA']
     model = MobileNetV2(input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3), include_top=False, alpha=ALPHA, weights="imagenet")
 
     for layer in model.layers:

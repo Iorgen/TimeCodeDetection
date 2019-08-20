@@ -4,6 +4,7 @@ from .forms import RequestForm
 from . import main
 
 
+# TODO Only API flask service, with not html pages - inside server API
 @main.route('/', methods=['POST', 'GET'])
 def index():
     name = None

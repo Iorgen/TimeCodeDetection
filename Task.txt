@@ -1,7 +1,0 @@
-#TODO Read and search samples in rcnn package
-#TODO Readme with explaining
-# Flask flash messages - need to use them
-# Разобраться с базой даннных позже, составить структуру, и определить реализацию
-# Обратная связь через email и остальное.
-# Реализовать API для доступа из чатов и остальной дичи
-https://codepen.io/html5andblog/pen/BLzkEw

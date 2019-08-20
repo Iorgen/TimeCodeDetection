@@ -1,9 +1,26 @@
 {
+  "ALPHA": 1.4,
+
+  "GRID_SIZE": 14,
   "IMAGE_SIZE": 448,
+  "IMAGE_HEIGHT": 360,
+  "IMAGE_WIDTH": 640,
+
+  "EPOCHS": 100,
+  "BATCH_SIZE": 32,
+  "PATIENCE": 15,
+  "LEARNING_RATE": 1e-4,
   "WEIGHT_DECAY": 0.0005,
-  "APLHA": 0.35,
-  "WEIGHTS": "model-0.28.h5",
-  "IOU_THRESHOLD" :0.5,
+  "LR_DECAY": 0.0001,
+
+  "IOU_THRESHOLD" : 0.5,
   "SCORE_THRESHOLD": 0.2,
-  "MAX_OUTPUT_SIZE" : 49
+  "MAX_OUTPUT_SIZE" : 49,
+
+  "TRAINABLE": 0,
+  "WEIGHTS": "model-0.28.h5",
+  "MULTITHREADING": 0,
+  "THREADS": 1,
+  "TRAIN_CSV": "detection_dataset/train.csv",
+  "VALIDATION_CSV": "detection_dataset/validation.csv"
 }
