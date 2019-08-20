@@ -2,6 +2,7 @@
 import json
 import csv
 import sys
+import cv2
 from matplotlib import pyplot
 from keras.layers import Conv2D
 # Windows only code ------------------
@@ -28,8 +29,8 @@ from tensorflow.keras.backend import epsilon
 # TODO Move configuration json
 ALPHA = 0.35
 
-GRID_SIZE = 7
-IMAGE_SIZE = 224
+GRID_SIZE = 14
+IMAGE_SIZE = 448
 
 IMAGE_HEIGHT = 360
 IMAGE_WIDTH = 640
@@ -211,8 +212,12 @@ class DataGenerator(Sequence):
 
                 changed.save(os.path.join("__debug__", os.path.basename(path)))
         #
-        # for image in batch_images:
-        #     pyplot.imshow(image)
+        # for idx, image in enumerate(batch_images[:5]):
+        #     pure_image = image
+        #     box_image = cv2.rectangle(pure_image, (50, 50), (50 + 10, 50 + 20), (255, 255, 00), 2)
+        #     pyplot.imshow(pure_image)
+        #     pyplot.show()
+        #     pyplot.imshow(box_image)
         #     pyplot.show()
         return batch_images, batch_boxes
 
@@ -370,7 +375,7 @@ def train():
     optimizer = SGD(lr=learning_rate, decay=LR_DECAY, momentum=0.9, nesterov=False)
     model.compile(loss=detection_loss(), optimizer=optimizer, metrics=[])
 
-    checkpoint = ModelCheckpoint("model-{val_iou:.2f}.h5", monitor="val_iou", verbose=1, save_best_only=True,
+    checkpoint = ModelCheckpoint("results/model-{val_iou:.2f}.h5", monitor="val_iou", verbose=1, save_best_only=True,
                                  save_weights_only=True, mode="max", period=1)
     stop = EarlyStopping(monitor="val_iou", patience=PATIENCE, mode="max")
     reduce_lr = ReduceLROnPlateau(monitor="val_iou", factor=0.6, patience=5, min_lr=1e-6, verbose=1, mode="max")

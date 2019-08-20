@@ -1,8 +1,8 @@
 {
-  "IMAGE_SIZE": 224,
+  "IMAGE_SIZE": 448,
   "WEIGHT_DECAY": 0.0005,
   "APLHA": 0.35,
-  "WEIGHTS": "model-0.09.h5",
+  "WEIGHTS": "model-0.28.h5",
   "IOU_THRESHOLD" :0.5,
   "SCORE_THRESHOLD": 0.2,
   "MAX_OUTPUT_SIZE" : 49
