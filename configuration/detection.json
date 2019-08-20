@@ -17,10 +17,10 @@
   "SCORE_THRESHOLD": 0.2,
   "MAX_OUTPUT_SIZE" : 49,
 
-  "TRAINABLE": 0,
+  "TRAINABLE": false,
   "WEIGHTS": "model-0.28.h5",
-  "MULTITHREADING": 0,
-  "THREADS": 1,
+  "MULTITHREADING": false,
+  "THREADS": true,
   "TRAIN_CSV": "detection_dataset/train.csv",
   "VALIDATION_CSV": "detection_dataset/validation.csv"
 }

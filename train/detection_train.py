@@ -1,4 +1,4 @@
-from core.MobileNetDetector import MobileNetV2Detector
+from core.models.MobileNetDetector import MobileNetV2Detector
 
 
 if __name__=="__main__":

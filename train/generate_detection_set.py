@@ -9,9 +9,11 @@ import errno
 from matplotlib import pyplot
 from random import randint, choice, uniform
 TEXT_FOLDER = 'recognition_dataset'
-DETECTION_FOLDER = 'detection_dataset'
-TRAIN_OUTPUT_FILE = "train.csv"
-VALIDATION_OUTPUT_FILE = "validation.csv"
+# DETECTION_FOLDER = os.path.join("train", "detection_dataset")
+DETECTION_FOLDER = "detection_dataset"
+TRAIN_OUTPUT_FILE = os.path.join("detection_dataset", "train.csv")
+VALIDATION_OUTPUT_FILE = os.path.join("detection_dataset", "validation.csv")
+
 SPLIT_RATIO = 0.8
 COLOR_SET = [(20, 20, 20), (160, 160, 160), (230, 230, 230)]
 # Two color mode

@@ -4,11 +4,11 @@ import json
 import tensorflow as tf
 import numpy as np
 from datetime import datetime
-from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input
+from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 from train.recognition_train import decode_predict_ctc
 from inference import recognition
-from inference import detection
 from core.singleton import Singleton
+from core.models.MobileNetDetector import MobileNetV2Detector
 
 
 class TimeCodeController(metaclass=Singleton):
@@ -31,8 +31,12 @@ class TimeCodeController(metaclass=Singleton):
                                                   self.detection_model_conf["WEIGHTS"])
         self.VIDEO_FOLDER = os.path.join('app', 'static', 'video')
         self.IMAGE_FOLDER = os.path.join('app', 'static', 'image')
+
+        self.detector = MobileNetV2Detector()
+        # self.recognizer = RecognitionLSTMDetector()
+
         self.recognizer = recognition.recognizer(self.recognition_model_conf)
-        self.detector = detection.detector(self.detection_model_conf)
+        # self.detector = detection.detector(self.detection_model_conf)
 
     def video_recognition(self, video):
         predictions = {}
@@ -75,8 +79,8 @@ class TimeCodeController(metaclass=Singleton):
             unscaled = image
             img = cv2.resize(unscaled, (self.IMAGE_SIZE, self.IMAGE_SIZE))
             feat_scaled = preprocess_input(np.array(img, dtype=np.float32))
-            self.detector.load_weights(self.DETECTION_WEIGHT_FILE)
-            pred = np.squeeze(self.detector.predict(feat_scaled[np.newaxis, :]))
+            self.detector.MODEL.load_weights(self.DETECTION_WEIGHT_FILE)
+            pred = np.squeeze(self.detector.MODEL.predict(feat_scaled[np.newaxis, :]))
             height, width, y_f, x_f, score = [a.flatten() for a in np.split(pred, pred.shape[-1], axis=-1)]
             coords = np.arange(pred.shape[0] * pred.shape[1])
             y = (y_f + coords // pred.shape[0]) / (pred.shape[0] - 1)
