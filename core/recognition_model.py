@@ -10,19 +10,20 @@ from keras.optimizers import Adam
 
 
 def init_recognition_model(model_conf):
-    img_w = model_conf["img_w"]
-    img_h = model_conf["img_h"]
-    absolute_max_string_len = model_conf["absolute_max_string_len"]
-    conv_filters = model_conf["conv_filters"]
-    kernel_size = model_conf["kernel_size"]
-    pool_size = model_conf["pool_size"]
-    time_dense_size = model_conf["time_dense_size"]
-    rnn_size = model_conf["rnn_size"]
+    img_w = model_conf["IMAGE_WIDTH"]
+    img_h = model_conf["IMAGE_HEIGHT"]
+    absolute_max_string_len = model_conf["ABSOLUTE_MAX_STRING"]
+    conv_filters = model_conf["CONV_FILTERS"]
+    kernel_size = model_conf["KERNEL_SIZE"]
+    pool_size = model_conf["POOL_SIZE"]
+    time_dense_size = model_conf["TIME_DENSE_SIZE"]
+    rnn_size = model_conf["RNN_SIZE"]
+
 
     if K.image_data_format() == 'channels_first':
-        input_shape = (1, model_conf["img_w"], model_conf["img_h"])
+        input_shape = (1, model_conf["IMAGE_WIDTH"],model_conf["IMAGE_HEIGHT"])
     else:
-        input_shape = (model_conf["img_w"], model_conf["img_h"], 1)
+        input_shape = (model_conf["IMAGE_WIDTH"],model_conf["IMAGE_HEIGHT"], 1)
 
     act = 'relu'
     input_data = Input(name='the_input', shape=input_shape, dtype='float32')
@@ -48,7 +49,7 @@ def init_recognition_model(model_conf):
     gru_2b = GRU(rnn_size, return_sequences=True, go_backwards=True, kernel_initializer='he_normal', name='gru2_b')(
         gru1_merged)
     # transforms RNN output to character activations:
-    inner = Dense(len(model_conf["alphabet"]) + 1, kernel_initializer='he_normal',
+    inner = Dense(len(model_conf["ALPHABET"]) + 1, kernel_initializer='he_normal',
                   name='dense2')(concatenate([gru_2, gru_2b]))
     y_pred = Activation('softmax', name='softmax')(inner)
     # Model(inputs=input_data, outputs=y_pred).summary()

@@ -107,7 +107,7 @@ class MobileNetV2Detector():
 
     def __init__(self):
         # os path refactor
-        with open('../configuration/detection.json', 'r') as f:
+        with open('configuration/detection.json', 'r') as f:
             # TODO model configuration initialization from detection.json
             model_conf = json.load(f)
 

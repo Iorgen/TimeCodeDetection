@@ -5,10 +5,34 @@ import tensorflow as tf
 import numpy as np
 from datetime import datetime
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
-from train.recognition_train import decode_predict_ctc
 from inference import recognition
 from core.singleton import Singleton
 from core.models.MobileNetDetector import MobileNetV2Detector
+from keras import backend as K
+ALPHABET = "0123456789:"
+
+
+def labels_to_text(labels):
+    ret = []
+    for c in labels:
+        if c == len(ALPHABET):  # CTC Blank
+            ret.append("")
+        else:
+            ret.append(ALPHABET[c])
+    return "".join(ret)
+
+
+def decode_predict_ctc(out, top_paths=1):
+    results = []
+    beam_width = 5
+    if beam_width < top_paths:
+        beam_width = top_paths
+    for i in range(top_paths):
+        lables = K.get_value(K.ctc_decode(out, input_length=np.ones(out.shape[0]) * out.shape[1],
+                                          greedy=False, beam_width=beam_width, top_paths=top_paths)[0][i])[0]
+        text = labels_to_text(lables)
+        results.append(text)
+    return results
 
 
 class TimeCodeController(metaclass=Singleton):

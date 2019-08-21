@@ -15,9 +15,9 @@ TRAIN_OUTPUT_FILE = os.path.join("detection_dataset", "train.csv")
 VALIDATION_OUTPUT_FILE = os.path.join("detection_dataset", "validation.csv")
 
 SPLIT_RATIO = 0.8
-COLOR_SET = [(20, 20, 20), (160, 160, 160), (230, 230, 230)]
+# COLOR_SET = [(20, 20, 20), (160, 160, 160), (230, 230, 230)]
 # Two color mode
-COLOR_SET = [(20, 20, 20), (230, 230, 230)]
+COLOR_SET = [(0, 0, 0), (230, 230, 230)]
 # TODO upload another fonts and generate text based on them
 FONT_SET = [0, 1, 2, 3, 4, 5, 6, 7, 16]
 
@@ -78,7 +78,7 @@ def generate_images(images_dir=None, video_folder='videos', debug=False):
                 # Set characteristics of text
                 font = choice(FONT_SET)
                 font_color = choice(COLOR_SET)
-                font_scale = round(uniform(2, 3), 1)
+                font_scale = round(uniform(1, 1.5), 1)
                 line_thickness = 2
 
                 # Take a frame from video recording
@@ -112,16 +112,16 @@ def generate_images(images_dir=None, video_folder='videos', debug=False):
                             line_thickness)
 
                 # Compute bounding box coordinates for neural network education
-                x0 = text_x_coordinate - 7
-                x1 = text_x_coordinate + text_width + 7
-                y0 = text_y_coordinate - text_height - 7
-                y1 = text_y_coordinate + 7
+                x0 = text_x_coordinate - 15
+                x1 = text_x_coordinate + text_width + 15
+                y0 = text_y_coordinate - text_height - 15
+                y1 = text_y_coordinate + 15
 
                 img_file_name = str(file_index) + "_sample%d.jpg" % image_index
                 cv2.imwrite(os.path.join(images_dir, img_file_name), image)
 
                 image_index += 1
-                if font_color == (20, 20, 20):
+                if font_color == (0, 0, 0):
                     class_name = 'black'
                     class_target = 2
                 if font_color == (230, 230, 230):
