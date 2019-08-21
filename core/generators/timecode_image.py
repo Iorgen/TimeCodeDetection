@@ -1,4 +1,5 @@
 # TODO create individual requirements file for gpu support
+# TODO if something go wrong,
 import csv
 import math
 import os
@@ -6,7 +7,6 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageEnhance
 from keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input
 from keras.layers import *
-# from tensorflow.keras.utils import Sequence
 from keras.utils import Sequence
 
 

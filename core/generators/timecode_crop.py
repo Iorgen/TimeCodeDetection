@@ -234,7 +234,7 @@ class TimeCodeCropGenerator(keras.callbacks.Callback):
         :param input_text:  text to be placed on the images
         :param width: ended width of generated images
         :param height: ended height of generated images
-        :param sample_image_path: path to images samples on which the overlay occurs (default: "datasets/train_data/*jpg")
+        :param sample_image_path: path to images samples on which overlay occurs (default: "datasets/train_data/*jpg")
         :return: np.array()
         '''
 
@@ -245,7 +245,7 @@ class TimeCodeCropGenerator(keras.callbacks.Callback):
         # Set characteristics of text
         font = choice(FONT_SET)
         bottom_left_corner = (7 + randint(-4, 4), 20 + randint(-5, 5))  # That parameter should be random set
-        font_scale = round(uniform(2.5, 3), 1)
+        font_scale = round(uniform(1.5, 2), 1)
         font_color = choice(COLOR_SET)
         line_thickness = 2
 

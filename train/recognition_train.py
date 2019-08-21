@@ -416,9 +416,6 @@
 # if __name__ == '__main__':
 #     run_name = datetime.datetime.now().strftime('%Y:%m:%d:%H:%M:%S')
 #     train(run_name, 0, 1)
-
-
-
 from core.models.ConvRNNRecognizer import ConvRNNRecognitionModel
 import datetime
 

@@ -100,6 +100,39 @@ class ConvRNNRecognitionModel():
         self.y_pred = y_pred
 
         # return model, input_data, y_pred
+    # Reverse translation of numerical classes back to characters
+    def labels_to_text(self, labels):
+        ret = []
+        for c in labels:
+            if c == len(self.ALPHABET):  # CTC Blank
+                ret.append("")
+            else:
+                ret.append(self.ALPHABET[c])
+        return "".join(ret)
+
+    # For a real OCR application, this should be beam search with a dictionary
+    # and language model.  For this example, best path is sufficient.
+    def decode_batch(self, test_func, word_batch):
+        out = test_func([word_batch])[0]
+        ret = []
+        for j in range(out.shape[0]):
+            out_best = list(np.argmax(out[j, 2:], 1))
+            out_best = [k for k, g in itertools.groupby(out_best)]
+            outstr = self.labels_to_text(out_best)
+            ret.append(outstr)
+        return ret
+
+    def decode_predict_ctc(self, out, top_paths=1):
+        results = []
+        beam_width = 5
+        if beam_width < top_paths:
+            beam_width = top_paths
+        for i in range(top_paths):
+            lables = K.get_value(K.ctc_decode(out, input_length=np.ones(out.shape[0]) * out.shape[1],
+                                              greedy=False, beam_width=beam_width, top_paths=top_paths)[0][i])[0]
+            text = self.labels_to_text(lables)
+            results.append(text)
+        return results
 
     def train(self, run_name, start_epoch, stop_epoch):
 
@@ -139,37 +172,5 @@ class ConvRNNRecognitionModel():
         # save model weights
         self.MODEL.save_weights(os.path.join(self.WEIGHTS_DIR, 'model_weights.h5'))
 
-    # Reverse translation of numerical classes back to characters
-    def labels_to_text(self, labels):
-        ret = []
-        for c in labels:
-            if c == len(self.ALPHABET):  # CTC Blank
-                ret.append("")
-            else:
-                ret.append(self.ALPHABET[c])
-        return "".join(ret)
 
-    # For a real OCR application, this should be beam search with a dictionary
-    # and language model.  For this example, best path is sufficient.
-    def decode_batch(self, test_func, word_batch):
-        out = test_func([word_batch])[0]
-        ret = []
-        for j in range(out.shape[0]):
-            out_best = list(np.argmax(out[j, 2:], 1))
-            out_best = [k for k, g in itertools.groupby(out_best)]
-            outstr = self.labels_to_text(out_best)
-            ret.append(outstr)
-        return ret
-
-    def decode_predict_ctc(self, out, top_paths=1):
-        results = []
-        beam_width = 5
-        if beam_width < top_paths:
-            beam_width = top_paths
-        for i in range(top_paths):
-            lables = K.get_value(K.ctc_decode(out, input_length=np.ones(out.shape[0]) * out.shape[1],
-                                              greedy=False, beam_width=beam_width, top_paths=top_paths)[0][i])[0]
-            text = self.labels_to_text(lables)
-            results.append(text)
-        return results
 

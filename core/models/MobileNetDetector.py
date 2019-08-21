@@ -1,20 +1,18 @@
 import json
 import sys
-import numpy as np
 import tensorflow as tf
-# - For windows path bugs
-sys.path.append(sys.path[0] + "/..")
-from keras.layers import Conv2D
 from keras.utils import plot_model
 from core.loss_func import detection_loss
-from tensorflow.keras.models import Model
-from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input
-from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau, Callback
-from tensorflow.keras.layers import *
-from tensorflow.keras.regularizers import l2
-from tensorflow.keras.optimizers import SGD
-from tensorflow.keras.backend import epsilon
+from keras.models import Model
+from keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input
+from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau, Callback
+from keras.layers import *
+from keras.regularizers import l2
+from keras.optimizers import SGD
+from keras.backend import epsilon
 from core.generators.timecode_image import TimeCodeImageGenerator
+# - For windows path bugs
+sys.path.append(sys.path[0] + "/..")
 
 
 class Validation(Callback):
