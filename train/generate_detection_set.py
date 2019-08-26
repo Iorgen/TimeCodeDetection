@@ -9,7 +9,7 @@ import errno
 from matplotlib import pyplot
 from random import randint, choice, uniform
 TEXT_FOLDER = 'recognition_dataset'
-# DETECTION_FOLDER = os.path.join("train", "detection_dataset")
+# DETECTION_FOLDER = os.path.join("train", "detection_dataset") - now like that
 DETECTION_FOLDER = "detection_dataset"
 TRAIN_OUTPUT_FILE = os.path.join("detection_dataset", "train.csv")
 VALIDATION_OUTPUT_FILE = os.path.join("detection_dataset", "validation.csv")

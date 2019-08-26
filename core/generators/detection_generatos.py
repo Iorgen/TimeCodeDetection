@@ -1,5 +1,5 @@
 # TODO create individual requirements file for gpu support
-# TODO if something go wrong,
+# TODO if something go wrong
 import csv
 import math
 import os
@@ -45,7 +45,7 @@ class TimeCodeImageGenerator(Sequence):
         for i, row in enumerate(boxes):
             path, x0, y0, x1, y1 = row
 
-            with Image.open(path) as img:
+            with Image.open(os.path.join('train', path)) as img:
                 if self.rnd_rescale:
                     old_width = img.width
                     old_height = img.height

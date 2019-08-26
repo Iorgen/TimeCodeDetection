@@ -3,41 +3,18 @@ import os
 import json
 import tensorflow as tf
 import numpy as np
+from random import randint
 from datetime import datetime
-from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
-from inference import recognition
 from core.singleton import Singleton
 from core.models.MobileNetDetector import MobileNetV2Detector
-from keras import backend as K
-ALPHABET = "0123456789:"
-
-
-def labels_to_text(labels):
-    ret = []
-    for c in labels:
-        if c == len(ALPHABET):  # CTC Blank
-            ret.append("")
-        else:
-            ret.append(ALPHABET[c])
-    return "".join(ret)
-
-
-def decode_predict_ctc(out, top_paths=1):
-    results = []
-    beam_width = 5
-    if beam_width < top_paths:
-        beam_width = top_paths
-    for i in range(top_paths):
-        lables = K.get_value(K.ctc_decode(out, input_length=np.ones(out.shape[0]) * out.shape[1],
-                                          greedy=False, beam_width=beam_width, top_paths=top_paths)[0][i])[0]
-        text = labels_to_text(lables)
-        results.append(text)
-    return results
+from core.models.ConvRNNRecognizer import ConvRNNRecognitionModel
+from keras.applications.mobilenet_v2 import preprocess_input
 
 
 class TimeCodeController(metaclass=Singleton):
 
     def __init__(self):
+
         with open('configuration/recognition.json', 'r') as f:
             self.recognition_model_conf = json.load(f)
 
@@ -49,6 +26,7 @@ class TimeCodeController(metaclass=Singleton):
         self.IOU_THRESHOLD = self.detection_model_conf["IOU_THRESHOLD"]
         self.SCORE_THRESHOLD = self.detection_model_conf["SCORE_THRESHOLD"]
         self.MAX_OUTPUT_SIZE = self.detection_model_conf["MAX_OUTPUT_SIZE"]
+
         self.RECOGNITION_WEIGHT_FILE = os.path.join('inference', 'weights', 'recognition',
                                                     self.recognition_model_conf["WEIGHTS"])
         self.DETECTION_WEIGHT_FILE = os.path.join('inference', 'weights', 'detection',
@@ -56,11 +34,10 @@ class TimeCodeController(metaclass=Singleton):
         self.VIDEO_FOLDER = os.path.join('app', 'static', 'video')
         self.IMAGE_FOLDER = os.path.join('app', 'static', 'image')
 
-        self.detector = MobileNetV2Detector()
-        # self.recognizer = RecognitionLSTMDetector()
-
-        self.recognizer = recognition.recognizer(self.recognition_model_conf)
-        # self.detector = detection.detector(self.detection_model_conf)
+        # Detection model initialization
+        self.detector = MobileNetV2Detector(self.detection_model_conf).get_model()
+        # Recognition model initialization
+        self.recognizer = ConvRNNRecognitionModel(self.recognition_model_conf)
 
     def video_recognition(self, video):
         predictions = {}
@@ -103,8 +80,8 @@ class TimeCodeController(metaclass=Singleton):
             unscaled = image
             img = cv2.resize(unscaled, (self.IMAGE_SIZE, self.IMAGE_SIZE))
             feat_scaled = preprocess_input(np.array(img, dtype=np.float32))
-            self.detector.MODEL.load_weights(self.DETECTION_WEIGHT_FILE)
-            pred = np.squeeze(self.detector.MODEL.predict(feat_scaled[np.newaxis, :]))
+            self.detector.load_weights(self.DETECTION_WEIGHT_FILE)
+            pred = np.squeeze(self.detector.predict(feat_scaled[np.newaxis, :]))
             height, width, y_f, x_f, score = [a.flatten() for a in np.split(pred, pred.shape[-1], axis=-1)]
             coords = np.arange(pred.shape[0] * pred.shape[1])
             y = (y_f + coords // pred.shape[0]) / (pred.shape[0] - 1)
@@ -127,14 +104,15 @@ class TimeCodeController(metaclass=Singleton):
 
     def crop_recognition(self, image):
         img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        img = cv2.bitwise_not(img)
+        # img = cv2.bitwise_not(img)
         img = cv2.resize(img, (135, 35))
         img = img.reshape(1, 35, 135)
         expand_img = np.expand_dims(img.T, axis=0)
         with self.graph.as_default():
-            self.recognizer.load_weights(self.RECOGNITION_WEIGHT_FILE)
-            net_out_value = self.recognizer.predict(expand_img)
-            pred_texts = decode_predict_ctc(net_out_value)
+            self.recognizer.inference_model.load_weights(self.RECOGNITION_WEIGHT_FILE)
+            pred_texts = self.recognizer.make_predict(expand_img)
+            # net_out_value = self.recognizer.make_predict(expand_img)
+            # pred_texts = decode_predict_ctc(net_out_value)
         return str(pred_texts)
 
 

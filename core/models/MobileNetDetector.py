@@ -1,79 +1,22 @@
-import json
+import os
 import sys
 import tensorflow as tf
 from keras.utils import plot_model
 from core.loss_func import detection_loss
 from keras.models import Model
-from keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input
-from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau, Callback
+from keras.applications.mobilenet_v2 import MobileNetV2
+from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
 from keras.layers import *
 from keras.regularizers import l2
 from keras.optimizers import SGD
-from keras.backend import epsilon
-from core.generators.timecode_image import TimeCodeImageGenerator
+from core.generators.detection_generatos import TimeCodeImageGenerator
+from core.callbacks.detection_callbacks import Validation
 # - For windows path bugs
 sys.path.append(sys.path[0] + "/..")
 
 
-class Validation(Callback):
-    def get_box_highest_percentage(self, mask):
-        reshaped = mask.reshape(mask.shape[0], np.prod(mask.shape[1:-1]), -1)
-
-        score_ind = np.argmax(reshaped[...,-1], axis=-1)
-        unraveled = np.array(np.unravel_index(score_ind, mask.shape[:-1])).T[:,1:]
-
-        cell_y, cell_x = unraveled[...,0], unraveled[...,1]
-        boxes = mask[np.arange(mask.shape[0]), cell_y, cell_x]
-
-        h, w, offset_y, offset_x = boxes[...,0], boxes[...,1], boxes[...,2], boxes[...,3]
-
-        return np.stack([cell_y + offset_y, cell_x + offset_x,
-                        (self.grid_size - 1) * h, (self.grid_size - 1) * w], axis=-1)
-
-    def __init__(self, generator, grid_size):
-        self.generator = generator
-        self.grid_size = grid_size
-
-    def on_epoch_end(self, epoch, logs):
-        mse = 0
-        intersections = 0
-        unions = 0
-
-        for i in range(len(self.generator)):
-            batch_images, gt = self.generator[i]
-            pred = self.model.predict_on_batch(batch_images)
-
-            pred = self.get_box_highest_percentage(pred)
-            gt = self.get_box_highest_percentage(gt)
-
-            mse += np.linalg.norm(gt - pred, ord='fro') / pred.shape[0]
-
-            pred = np.maximum(pred, 0)
-            gt = np.maximum(gt, 0)
-
-            diff_height = np.minimum(gt[:,0] + gt[:,2], pred[:,0] + pred[:,2]) - np.maximum(gt[:,0], pred[:,0])
-            diff_width = np.minimum(gt[:,1] + gt[:,3], pred[:,1] + pred[:,3]) - np.maximum(gt[:,1], pred[:,1])
-            intersection = np.maximum(diff_width, 0) * np.maximum(diff_height, 0)
-
-            area_gt = gt[:,2] * gt[:,3]
-            area_pred = pred[:,2] * pred[:,3]
-            union = np.maximum(area_gt + area_pred - intersection, 0)
-
-            intersections += np.sum(intersection * (union > 0))
-            unions += np.sum(union)
-
-        iou = np.round(intersections / (unions + epsilon()), 4)
-        logs["val_iou"] = iou
-
-        mse = np.round(mse, 4)
-        logs["val_mse"] = mse
-
-        print(" - val_iou: {} - val_mse: {}".format(iou, mse))
-
-
 class MobileNetV2Detector():
     # Default initialization
-    # ?
     ALPHA = 0.35
 
     GRID_SIZE = 14
@@ -105,12 +48,7 @@ class MobileNetV2Detector():
     # Detection model
     MODEL = None
 
-    def __init__(self):
-        # os path refactor
-        with open('configuration/detection.json', 'r') as f:
-            # TODO model configuration initialization from detection.json
-            model_conf = json.load(f)
-
+    def __init__(self, model_conf):
         self.ALPHA = model_conf['ALPHA']
 
         self.GRID_SIZE = model_conf['GRID_SIZE']
@@ -135,11 +73,14 @@ class MobileNetV2Detector():
         self.MULTITHREADING = model_conf['MULTITHREADING']
         self.THREADS = model_conf['THREADS']
 
-        # Path to input files
-        self.TRAIN_CSV = "detection_dataset/train.csv"
-        self.VALIDATION_CSV = "detection_dataset/validation.csv"
+        # CSV files
+        self.TRAIN_CSV = os.path.join('train', 'detection_dataset', model_conf['TRAIN_CSV'])
+        self.VALIDATION_CSV = os.path.join('train', 'detection_dataset', model_conf['VALIDATION_CSV'])
 
         self.init_model()
+
+    def get_model(self):
+        return copy.deepcopy(self.MODEL)
 
     def init_model(self, trainable=False):
         """

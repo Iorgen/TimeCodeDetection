@@ -1,6 +1,5 @@
 import os
 import itertools
-import json
 import numpy as np
 from keras.layers.convolutional import Conv2D, MaxPooling2D
 from keras.layers import Input, Dense, Activation
@@ -11,24 +10,21 @@ from keras.layers.recurrent import GRU
 from keras import backend as K
 from core.loss_func import ctc_lambda_func
 from keras.optimizers import Adam
-from core.generators.timecode_crop import TimeCodeCropGenerator
+from core.generators.recognition_generators import TimeCodeCropGenerator
 
 
 class ConvRNNRecognitionModel():
-
     OUTPUT_DIR = 'logs'
     # Two color mode
     ALPHABET = ''
     input_data = None
     y_pred = None
-    # Detection model
+    # Recognition model
     MODEL = None
+    # Recognition model for inference
+    inference_model = None
 
-    def __init__(self):
-
-        with open('../configuration/recognition.json', 'r') as f:
-            model_conf = json.load(f)
-
+    def __init__(self, model_conf):
         self.ALPHABET = model_conf['ALPHABET']
         self.WORDS_PER_EPOCH = model_conf['WORDS_PER_EPOCH']
         self.VAL_SPLIT = model_conf['VAL_SPLIT']
@@ -42,8 +38,12 @@ class ConvRNNRecognitionModel():
         self.TIME_DENSE_SIZE = model_conf['TIME_DENSE_SIZE']
         self.RNN_SIZE = model_conf['RNN_SIZE']
         self.WEIGHTS_DIR = model_conf['WEIGHTS_DIR']
-
         self.init_model()
+
+    def make_predict(self, input):
+        net_out_value = self.inference_model.predict(input)
+        pred_texts = self.decode_predict_ctc(net_out_value)
+        return pred_texts
 
     def init_model(self):
 
@@ -98,8 +98,8 @@ class ConvRNNRecognitionModel():
         self.MODEL = model
         self.input_data = input_data
         self.y_pred = y_pred
+        self.inference_model = Model(inputs=self.input_data, outputs=self.y_pred)
 
-        # return model, input_data, y_pred
     # Reverse translation of numerical classes back to characters
     def labels_to_text(self, labels):
         ret = []
@@ -135,20 +135,17 @@ class ConvRNNRecognitionModel():
         return results
 
     def train(self, run_name, start_epoch, stop_epoch):
-
         val_words = int(self.WORDS_PER_EPOCH * (self.VAL_SPLIT))
-        fdir = 'recognition_dataset'
+        words_dir = os.path.join('train', 'recognition_dataset')
+        # fdir = 'train/recognition_dataset'
 
-        img_gen = TimeCodeCropGenerator(monogram_file=os.path.join(fdir, 'wordlist_mono_clean.txt'),
-                                        bigram_file=os.path.join(fdir, 'wordlist_bi_clean.txt'),
+        img_gen = TimeCodeCropGenerator(monogram_file=os.path.join(words_dir, 'wordlist_mono_clean.txt'),
+                                        bigram_file=os.path.join(words_dir, 'wordlist_bi_clean.txt'),
                                         minibatch_size=self.MINIBATCH_SIZE,
                                         img_w=self.IMAGE_WIDTH,
                                         img_h=self.IMAGE_HEIGHT,
                                         downsample_factor=(self.POOL_SIZE ** 2),
-                                        # TODO have a look inside original model and check that parameter
                                         val_split=self.WORDS_PER_EPOCH - val_words, alphabet=self.ALPHABET)
-        # get keras model structure
-        # self.MODEL, self.input_data, self.y_pred = self.init_model()
 
         # preeducation condition
         if start_epoch > 0:
@@ -166,8 +163,7 @@ class ConvRNNRecognitionModel():
                                  validation_data=img_gen.next_val(),  # on validation step
                                  validation_steps=val_words // self.MINIBATCH_SIZE,
                                  # callbacks=[viz_cb, img_gen],
-                                 callbacks=[img_gen],
-                                 initial_epoch=start_epoch)
+                                 callbacks=[img_gen], initial_epoch=start_epoch)
 
         # save model weights
         self.MODEL.save_weights(os.path.join(self.WEIGHTS_DIR, 'model_weights.h5'))

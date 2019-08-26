@@ -7,7 +7,7 @@
   "IMAGE_WIDTH": 640,
 
   "EPOCHS": 100,
-  "BATCH_SIZE": 32,
+  "BATCH_SIZE": 64,
   "PATIENCE": 15,
   "LEARNING_RATE": 1e-4,
   "WEIGHT_DECAY": 0.0005,
@@ -21,6 +21,6 @@
   "WEIGHTS": "model-0.36.h5",
   "MULTITHREADING": false,
   "THREADS": true,
-  "TRAIN_CSV": "detection_dataset/train.csv",
-  "VALIDATION_CSV": "detection_dataset/validation.csv"
+  "TRAIN_CSV": "train.csv",
+  "VALIDATION_CSV": "validation.csv"
 }
