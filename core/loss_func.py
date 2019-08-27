@@ -1,6 +1,6 @@
 from keras import backend as K
 import tensorflow as tf
-from tensorflow.keras.losses import binary_crossentropy
+from keras.losses import binary_crossentropy
 
 
 # TODO document all the loss type functions

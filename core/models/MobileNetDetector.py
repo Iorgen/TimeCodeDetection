@@ -1,6 +1,7 @@
 import os
 import sys
 import tensorflow as tf
+import copy
 from keras.utils import plot_model
 from core.loss_func import detection_loss
 from keras.models import Model
@@ -49,6 +50,9 @@ class MobileNetV2Detector():
     MODEL = None
 
     def __init__(self, model_conf):
+        from tensorflow.python.client import device_lib
+        print(device_lib.list_local_devices())
+
         self.ALPHA = model_conf['ALPHA']
 
         self.GRID_SIZE = model_conf['GRID_SIZE']
@@ -141,7 +145,7 @@ class MobileNetV2Detector():
         optimizer = SGD(lr=learning_rate, decay=self.LR_DECAY, momentum=0.9, nesterov=False)
         self.MODEL.compile(loss=detection_loss(self.GRID_SIZE), optimizer=optimizer, metrics=[])
 
-        checkpoint = ModelCheckpoint("results/model-{val_iou:.2f}.h5", monitor="val_iou", verbose=1,
+        checkpoint = ModelCheckpoint(os.path.join("train", "results", "model-{val_iou:.2f}.h5"), monitor="val_iou", verbose=1,
                                      save_best_only=True,
                                      save_weights_only=True, mode="max", period=1)
         stop = EarlyStopping(monitor="val_iou", patience=self.PATIENCE, mode="max")

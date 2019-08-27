@@ -1,6 +1,7 @@
 from keras.callbacks import Callback
 from keras.layers import *
 from keras.backend import epsilon
+import numpy as np
 
 
 class Validation(Callback):
