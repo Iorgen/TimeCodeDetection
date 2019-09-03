@@ -13,6 +13,7 @@ if __name__ == "__main__":
     if args.model:
         if args.model == 'recognition':
             print("training %s model" % args.model)
+            print(os.path.join('configuration', 'recognition.json'))
             with open(os.path.join('configuration', 'recognition.json'), 'r') as f:
                 model_conf = json.load(f)
             recognizer = ConvRNNRecognitionModel(model_conf)
@@ -22,6 +23,7 @@ if __name__ == "__main__":
 
         elif args.model == 'detection':
             print("training %s model" % args.model)
+            print(os.path.join('configuration', 'detection.json'))
             with open(os.path.join('configuration', 'detection.json'), 'r') as f:
                 model_conf = json.load(f)
             detector = MobileNetV2Detector(model_conf)

@@ -174,7 +174,7 @@ class TimeCodeCropGenerator(keras.callbacks.Callback):
 
     @staticmethod
     def paint_text_cv(input_text, width, height, sample_image_path=os.path.join('train', 'recognition_dataset', '*jpg')):
-        '''
+        ''' Function which put text on image
         :param input_text:  text to be placed on the images
         :param width: ended width of generated images
         :param height: ended height of generated images

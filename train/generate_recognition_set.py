@@ -2,11 +2,17 @@ import os
 import tarfile
 from random import randint
 
-mono_clean_path = 'recognition_dataset/wordlist_mono_clean.txt'
-bi_clean_path = 'recognition_dataset/wordlist_bi_clean.txt'
-tarfile_path = 'recognition_dataset/wordlists.tgz'
 
+class AlphabetDatasetGenerator():
 
+    mono_clean_path = 'recognition_dataset/wordlist_mono_clean.txt'
+    bi_clean_path = 'recognition_dataset/wordlist_bi_clean.txt'
+    tarfile_path = 'recognition_dataset/wordlists.tgz'
+
+    def __init__(self):0
+        pass
+
+# Move as common function
 def create_sequence_dataset():
 
     with open(mono_clean_path, "w") as file:

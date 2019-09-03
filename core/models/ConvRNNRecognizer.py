@@ -40,11 +40,6 @@ class ConvRNNRecognitionModel():
         self.WEIGHTS_DIR = model_conf['WEIGHTS_DIR']
         self.init_model()
 
-    def make_predict(self, input):
-        net_out_value = self.inference_model.predict(input)
-        pred_texts = self.decode_predict_ctc(net_out_value)
-        return pred_texts
-
     def init_model(self):
 
         if K.image_data_format() == 'channels_first':
@@ -133,6 +128,11 @@ class ConvRNNRecognitionModel():
             text = self.labels_to_text(lables)
             results.append(text)
         return results
+
+    def make_prediction(self, input):
+        net_out_value = self.inference_model.predict(input)
+        pred_texts = self.decode_predict_ctc(net_out_value)
+        return pred_texts
 
     def train(self, run_name, start_epoch, stop_epoch):
         val_words = int(self.WORDS_PER_EPOCH * (self.VAL_SPLIT))

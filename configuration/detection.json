@@ -18,7 +18,7 @@
   "MAX_OUTPUT_SIZE" : 49,
 
   "TRAINABLE": false,
-  "WEIGHTS": "model-0.36.h5",
+  "WEIGHTS": "model-0.44.h5",
   "MULTITHREADING": false,
   "THREADS": true,
   "TRAIN_CSV": "train.csv",

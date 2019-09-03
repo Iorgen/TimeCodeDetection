@@ -3,9 +3,8 @@ import os
 import json
 import tensorflow as tf
 import numpy as np
-from random import randint
 from datetime import datetime
-from core.singleton import Singleton
+from core.patterns.singleton import Singleton
 from core.models.MobileNetDetector import MobileNetV2Detector
 from core.models.ConvRNNRecognizer import ConvRNNRecognitionModel
 from keras.applications.mobilenet_v2 import preprocess_input
@@ -110,9 +109,7 @@ class TimeCodeController(metaclass=Singleton):
         expand_img = np.expand_dims(img.T, axis=0)
         with self.graph.as_default():
             self.recognizer.inference_model.load_weights(self.RECOGNITION_WEIGHT_FILE)
-            pred_texts = self.recognizer.make_predict(expand_img)
-            # net_out_value = self.recognizer.make_predict(expand_img)
-            # pred_texts = decode_predict_ctc(net_out_value)
+            pred_texts = self.recognizer.make_prediction(expand_img)
         return str(pred_texts)
 
 

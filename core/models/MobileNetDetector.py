@@ -1,9 +1,9 @@
 import os
 import sys
 import tensorflow as tf
-import copy
 from keras.utils import plot_model
 from core.loss_func import detection_loss
+from core.patterns.singleton import Singleton
 from keras.models import Model
 from keras.applications.mobilenet_v2 import MobileNetV2
 from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
