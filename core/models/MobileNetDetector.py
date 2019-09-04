@@ -100,15 +100,18 @@ class MobileNetV2Detector():
             layer.trainable = trainable
 
         block = model.get_layer("block_16_project_BN").output
-
+        print(block)
         x = Conv2D(112, padding="same", kernel_size=3, strides=1, activation="relu")(block)
         x = Conv2D(112, padding="same", kernel_size=3, strides=1, use_bias=False)(x)
         x = BatchNormalization()(x)
         x = Activation("relu")(x)
         x = Conv2D(5, padding="same", kernel_size=1, activation="sigmoid")(x)
 
+        print(model.input)
+        print(x)
+        print(model)
         model = Model(inputs=model.input, outputs=x)
-
+        print(model)
         # divide by 2 since d/dweight learning_rate * weight^2 = 2 * learning_rate * weight
         # see https://arxiv.org/pdf/1711.05101.pdf
         regularizer = l2(self.WEIGHT_DECAY / 2)
@@ -148,10 +151,11 @@ class MobileNetV2Detector():
         checkpoint = ModelCheckpoint(os.path.join("train", "results", "model-{val_iou:.2f}.h5"), monitor="val_iou", verbose=1,
                                      save_best_only=True,
                                      save_weights_only=True, mode="max", period=1)
+
         stop = EarlyStopping(monitor="val_iou", patience=self.PATIENCE, mode="max")
         reduce_lr = ReduceLROnPlateau(monitor="val_iou", factor=0.6, patience=5, min_lr=1e-6, verbose=1, mode="max")
 
         self.MODEL.fit_generator(generator=train_datagen, epochs=self.EPOCHS,
-                                 callbacks=[validation_datagen, checkpoint, reduce_lr, stop], shuffle=True, verbose=1
-                                 # workers=THREADS, # use_multiprocessing=MULTITHREADING,
-                                )
+                                 callbacks=[validation_datagen, checkpoint, reduce_lr, stop],
+                                 shuffle=True, verbose=1,
+                                 workers=self.THREADS, use_multiprocessing=self.MULTITHREADING)

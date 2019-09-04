@@ -10,6 +10,7 @@ from keras.layers import *
 from keras.utils import Sequence
 
 
+# safer way to do multiprocessing. - TODO describe method
 class TimeCodeImageGenerator(Sequence):
 
     def __init__(self, csv_file, rnd_rescale=False, rnd_multiply=False, rnd_color=False,

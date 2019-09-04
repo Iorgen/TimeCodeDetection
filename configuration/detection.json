@@ -20,7 +20,7 @@
   "TRAINABLE": false,
   "WEIGHTS": "model-0.44.h5",
   "MULTITHREADING": false,
-  "THREADS": true,
+  "THREADS": 1,
   "TRAIN_CSV": "train.csv",
   "VALIDATION_CSV": "validation.csv"
 }
