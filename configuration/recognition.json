@@ -13,5 +13,8 @@
   "RNN_SIZE": 512 ,
   "MINIBATCH_SIZE": 32,
   "WEIGHTS_DIR" : "../inference/weights",
-  "WEIGHTS": "weights19.h5"
+  "WEIGHTS": "weights19.h5",
+  "MONO_CLEAN_PATH": "recognition_dataset/wordlist_mono_clean.txt",
+  "BI_CLEAN_PATH": "recognition_dataset/wordlist_bi_clean.txt",
+  "TARFILE_PATH": "recognition_dataset/wordlists.tgz"
 }

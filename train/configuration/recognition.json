@@ -1,0 +1,11 @@
+{
+  "RECOGNITION_FOLDER": "recognition_dataset",
+  "TIME_CODE_FILE": "time_code_mono.txt",
+  "DATE_FILE": "date_mono.txt",
+  "DAY_WEEK_FILE": "day_of_week_mono.txt",
+  "SPEED_FILE": "speed_mono.txt",
+  "CAMERA_FILE": "camera_mono.txt",
+  "MONO_CLEAN_PATH": "wordlist_mono_clean.txt",
+  "BI_CLEAN_PATH": "wordlist_bi_clean.txt",
+  "TARFILE_PATH": "wordlists.tgz"
+}

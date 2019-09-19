@@ -1,6 +1,4 @@
 import skvideo.io
-import json
-import numpy as np
 import cv2
 import os
 import csv
@@ -22,31 +20,44 @@ COLOR_SET = [(0, 0, 0), (230, 230, 230)]
 FONT_SET = [0, 1, 2, 3, 4, 5, 6, 7, 16]
 
 
-def rotate_image(mat, angle):
-    """
-    Rotates an image (angle in degrees) and expands image to avoid cropping
-    """
+class DetectionDatasetGenerator:
+    TEXT_FOLDER = 'recognition_dataset'
+    DETECTION_FOLDER = "detection_dataset"
+    TRAIN_OUTPUT_FILE = os.path.join("detection_dataset", "train.csv")
+    VALIDATION_OUTPUT_FILE = os.path.join("detection_dataset", "validation.csv")
+    SPLIT_RATIO = 0.8
+    COLOR_SET = [(0, 0, 0), (230, 230, 230)]
+    FONT_SET = [0, 1, 2, 3, 4, 5, 6, 7, 16]
 
-    height, width = mat.shape[:2] # image shape has 3 dimensions
-    image_center = (width/2, height/2) # getRotationMatrix2D needs coordinates in reverse order (width, height) compared to shape
+    def __init__(self):
+        pass
 
-    rotation_mat = cv2.getRotationMatrix2D(image_center, angle, 1.)
+    @staticmethod
+    def rotate_image(mat, angle):
+        """
+        Rotates an image (angle in degrees) and expands image to avoid cropping
+        """
 
-    # rotation calculates the cos and sin, taking absolutes of those.
-    abs_cos = abs(rotation_mat[0,0])
-    abs_sin = abs(rotation_mat[0,1])
+        height, width = mat.shape[:2] # image shape has 3 dimensions
+        image_center = (width/2, height/2) # getRotationMatrix2D needs coordinates in reverse order (width, height) compared to shape
 
-    # find the new width and height bounds
-    bound_w = int(height * abs_sin + width * abs_cos)
-    bound_h = int(height * abs_cos + width * abs_sin)
+        rotation_mat = cv2.getRotationMatrix2D(image_center, angle, 1.)
 
-    # subtract old image center (bringing image back to origo) and adding the new image center coordinates
-    rotation_mat[0, 2] += bound_w/2 - image_center[0]
-    rotation_mat[1, 2] += bound_h/2 - image_center[1]
+        # rotation calculates the cos and sin, taking absolutes of those.
+        abs_cos = abs(rotation_mat[0,0])
+        abs_sin = abs(rotation_mat[0,1])
 
-    # rotate image with the new bounds and translated rotation matrix
-    rotated_mat = cv2.warpAffine(mat, rotation_mat, (bound_w, bound_h))
-    return rotated_mat
+        # find the new width and height bounds
+        bound_w = int(height * abs_sin + width * abs_cos)
+        bound_h = int(height * abs_cos + width * abs_sin)
+
+        # subtract old image center (bringing image back to origo) and adding the new image center coordinates
+        rotation_mat[0, 2] += bound_w/2 - image_center[0]
+        rotation_mat[1, 2] += bound_h/2 - image_center[1]
+
+        # rotate image with the new bounds and translated rotation matrix
+        rotated_mat = cv2.warpAffine(mat, rotation_mat, (bound_w, bound_h))
+        return rotated_mat
 
 
 def generate_images(images_dir=None, video_folder='videos', debug=False):
@@ -89,7 +100,7 @@ def generate_images(images_dir=None, video_folder='videos', debug=False):
                 # if not success:
                 #     break
 
-                image = rotate_image(image, 360 - rotate_angle)
+                image = DetectionDatasetGenerator.rotate_image(image, 360 - rotate_angle)
                 # Get random timecode from list of codes
                 text = choice(lines)[0:8]
 
@@ -146,7 +157,7 @@ def generate_images(images_dir=None, video_folder='videos', debug=False):
         except IOError as exc:
             if exc.errno != errno.EISDIR:
                 raise
-        file_index +=1
+        file_index += 1
 
     # preserve percentage of samples for each class ("stratified")
     output.sort(key=lambda tup: tup[-1])
