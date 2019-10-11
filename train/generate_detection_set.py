@@ -181,7 +181,6 @@ class DetectionDatasetGenerator:
                 vidcap = cv2.VideoCapture(file)
                 success = True
                 while success:
-
                     # take frame from video
                     success, image = vidcap.read()
                     if image_index == self.images_per_video:
@@ -195,8 +194,6 @@ class DetectionDatasetGenerator:
                                       choice(self.TEXT['camera_lines']))
 
                     overlay_x, overlay_y = self.compute_overlay_coordinates(image, overlay)
-
-
 
                     # draw txts as a pie
                     i = 0
@@ -215,12 +212,12 @@ class DetectionDatasetGenerator:
                     # using first x,y and concated heights and max(width) write bounding boxes
                     x0 = overlay_x - self.overlay_padding
                     x1 = overlay_x + overlay.width + self.overlay_padding
-                    y0 = overlay_y - overlay.height - self.overlay_padding
-                    y1 = overlay_y + self.overlay_padding
-
+                    y0 = overlay_y + overlay.height + overlay.text_height['time_code']
+                    y1 = overlay_y
+                    print(x0, x1, y0, y1)
                     # --------------------------------------------------------------------
                     img_file_name = video_file_name + "_sample%d.jpg" % image_index
-                    cv2.imwrite(os.path.join(self.video_folder, img_file_name), image)
+                    cv2.imwrite(os.path.join(images_dir, img_file_name), image)
 
                     # Set class marks
                     image_index += 1
@@ -232,7 +229,7 @@ class DetectionDatasetGenerator:
                         class_target = 0
 
                     self.OUTPUT.append((os.path.join(images_dir, img_file_name),
-                                   image_height, image_width,
+                                   image.shape[0], image.shape[1],
                                    x0, y0, x1, y1,
                                    class_name, class_target))
 
@@ -241,12 +238,17 @@ class DetectionDatasetGenerator:
                         print("font-color", overlay.font_color)
                         print("font scale", overlay.font_scale)
                         print("line thickness", overlay.line_thickness)
-                        cv2.rectangle(image, (int(x0), int(y0)), (int(x1), int(y1)), (0, 255, 0), 1)
+                        # cv2.rectangle(image, (int(x0), int(y0)), (int(x1), int(y1)), (0, 255, 255), 3)
+                        cv2.rectangle(image, (int(x0), int(y0)), (int(x0+ 10), int(y0+ 10)),
+                                      (0, 255, 255), 5)
+                        cv2.rectangle(image, (int(x1), int(y1)), (int(x1 + 10), int(y1 + 10)),
+                                      (0, 255, 0), 5)
+
                         pyplot.imshow(image)
                         pyplot.show()
                         if image_index > 4:
                             success = False
-                            break;
+                            break
             except IOError as exc:
                 if exc.errno != errno.EISDIR:
                     raise
