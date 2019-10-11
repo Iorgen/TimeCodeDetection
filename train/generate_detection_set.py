@@ -3,6 +3,7 @@ import cv2
 import os
 import csv
 import glob
+import numpy
 import errno
 import json
 from matplotlib import pyplot
@@ -14,6 +15,38 @@ VALIDATION_OUTPUT_FILE = os.path.join("detection_dataset", "validation.csv")
 SPLIT_RATIO = 0.8
 COLOR_SET = [(0, 0, 0), (230, 230, 230)]
 FONT_SET = [0, 1, 2, 3, 4, 5, 6, 7, 16]
+
+
+class OverLay:
+
+    COLOR_SET = [(0, 0, 0), (230, 230, 230)]
+    FONT_SET = [0, 1, 2, 3, 4, 5, 6, 7, 16]
+
+    def __init__(self, time_code="", date="", speed="", camera=""):
+        self.text = dict()
+        self.text_width = dict()
+        self.text_height = dict()
+        self.width = 0
+        self.height = 0
+        # Set text characteristics
+        self.font = choice(FONT_SET)
+        self.font_scale = round(uniform(1, 1.5), 1)
+        self.font_color = choice(COLOR_SET)
+        self.line_thickness = 2
+        # Save text values
+        self.text['time_code'] = time_code
+        self.text['date'] = date
+        self.text['speed'] = speed
+        self.text['camera'] = camera
+        #
+
+        for key in self.text:
+            self.text_width[key] = cv2.getTextSize(self.text[key],
+                                                   self.font, self.font_scale, self.line_thickness)[0][0]
+            self.text_height[key] = cv2.getTextSize(self.text[key],
+                                                    self.font, self.font_scale, self.line_thickness)[0][1]
+            self.height += self.text_height[key]
+        self.width = self.text_width[max(self.text_width, key=lambda key: self.text_width[key])]
 
 
 class DetectionDatasetGenerator:
@@ -107,18 +140,6 @@ class DetectionDatasetGenerator:
             pass
         return rotate_angle
 
-    @staticmethod
-    def get_random_text_settings():
-        """
-        return random overlay configuration
-        :return: dict()
-        """
-        overlay = dict()
-        overlay['font'] = choice(FONT_SET)
-        overlay['font_color'] = choice(COLOR_SET)
-        overlay['font_scale'] = round(uniform(1, 1.5), 1)
-        overlay['line_thickness'] = 2
-        return overlay
 
     @staticmethod
     def read_file(file_name):
@@ -130,25 +151,22 @@ class DetectionDatasetGenerator:
                 yield line
 
     @staticmethod
-    def compute_text_coordinates(image, text,  overlay):
+    def compute_overlay_coordinates(image, overlay):
         """
         Function for computing coordinates of overlay by overlay parameters such
         text, font, font_scale, line_thickness
         :param image: numpy.ndarray`
-        :param overlay: dict
-        :return: (int, int) -> text_x_coordinate, text_y_coordinate
+        :param overlay: class OverLay
+        :return: (int, int)
         """
-        text_size = cv2.getTextSize(text,
-                                    overlay['font'],
-                                    overlay['font_scale'],
-                                    overlay['line_thickness'])
-        text_width = text_size[0][0]
-        text_height = text_size[0][1]
+
+        # assert isinstance(overlay, OverLay)
+        # assert isinstance(image, numpy.ndarray)
         image_width = image.shape[1]
         image_height = image.shape[0]
-        text_x_coordinate = randint(10, int(image_width - text_width))
-        text_y_coordinate = randint(int(text_height + 5), int(image_height - text_height))
-        return text_x_coordinate, text_y_coordinate, text_width, text_height
+        overlay_x = randint(10, int(image_width - overlay.width))
+        overlay_y = randint(int(overlay.height + 5), int(image_height - overlay.height))
+        return overlay_x, overlay_y
 
     def generate_images(self, images_dir=None, debug=False):
         for video_file_name in self.video_files(os.path.join(self.DETECTION_FOLDER, self.video_folder)):
@@ -163,60 +181,53 @@ class DetectionDatasetGenerator:
                 vidcap = cv2.VideoCapture(file)
                 success = True
                 while success:
-                    # set random settings for overlay
-                    text_settings = self.get_random_text_settings()
-                    overlay = dict()
-                    overlay['time_code'] = choice(self.TEXT['time_code_lines'])
-                    overlay['date_lines'] = choice(self.TEXT['date_lines'])
-                    overlay['speed_lines'] = choice(self.TEXT['speed_lines'])
-                    overlay['camera_lines'] = choice(self.TEXT['camera_lines'])
 
                     # take frame from video
                     success, image = vidcap.read()
                     if image_index == self.images_per_video:
                         success = False
+                    # Rotate image if we've got .mov file
                     image = self.rotate_image(image, 360 - rotate_angle)
+                    # set random settings for overlay and random text from dictionary
+                    overlay = OverLay(choice(self.TEXT['time_code_lines']),
+                                      choice(self.TEXT['date_lines']), 
+                                      choice(self.TEXT['speed_lines']), 
+                                      choice(self.TEXT['camera_lines']))
+
+                    overlay_x, overlay_y = self.compute_overlay_coordinates(image, overlay)
 
 
-                    # Compute for each text - size of the text
-                    # using sizes compute available amount of points for drawing on image
+
                     # draw txts as a pie
-                    # using first x,y and concated heights and max(width) write bounding boxes
                     i = 0
-                    for key in overlay:
-                        text_x_coordinate, text_y_coordinate, text_width, text_height = self.compute_text_coordinates(
-                            image, overlay[key], text_settings)
-                        gap = text_height + 5
-                        y = int((image.shape[0] + text_height) / 2) + i * gap
-                        x = 10  # for center alignment => int((img.shape[1] - textsize[0]) / 2)
-                        cv2.putText(image, overlay[key], (text_x_coordinate, y),
-                                    text_settings['font'],
-                                    text_settings['font_scale'],
-                                    (255, 255, 255),
-                                    text_settings['line_thickness'],
+                    for key in overlay.text:
+                        gap = overlay.text_height[key] + 5
+                        y = overlay_y + i * gap
+                        x = overlay_x  # for center alignment => int((img.shape[1] - textsize[0]) / 2)
+                        cv2.putText(image, overlay.text[key], (x, y),
+                                    overlay.font,
+                                    overlay.font_scale,
+                                    overlay.font_color,
+                                    overlay.line_thickness,
                                     lineType=cv2.LINE_AA)
                         i += 1
-                    cv2.imshow("Result Image", image)
-                    cv2.waitKey(0)
-                    cv2.destroyAllWindows()
-                    # Rotate image if we've got .mov file
 
+                    # using first x,y and concated heights and max(width) write bounding boxes
+                    x0 = overlay_x - self.overlay_padding
+                    x1 = overlay_x + overlay.width + self.overlay_padding
+                    y0 = overlay_y - overlay.height - self.overlay_padding
+                    y1 = overlay_y + self.overlay_padding
 
-                    # Compute bounding box coordinates for neural network education
-                    x0 = text_x_coordinate - self.overlay_padding
-                    x1 = text_x_coordinate + text_width + self.overlay_padding
-                    y0 = text_y_coordinate - text_height - self.overlay_padding
-                    y1 = text_y_coordinate + self.overlay_padding
                     # --------------------------------------------------------------------
                     img_file_name = video_file_name + "_sample%d.jpg" % image_index
                     cv2.imwrite(os.path.join(self.video_folder, img_file_name), image)
 
                     # Set class marks
                     image_index += 1
-                    if font_color == (0, 0, 0):
+                    if overlay.font_color == (0, 0, 0):
                         class_name = 'black'
                         class_target = 2
-                    if font_color == (230, 230, 230):
+                    if overlay.font_color == (230, 230, 230):
                         class_name = 'white'
                         class_target = 0
 
@@ -226,10 +237,10 @@ class DetectionDatasetGenerator:
                                    class_name, class_target))
 
                     if debug:
-                        print("font:", font)
-                        print("font-color", font_color)
-                        print("font scale", font_scale)
-                        print("line thickness", line_thickness)
+                        print("font:", overlay.font)
+                        print("font-color", overlay.font_color)
+                        print("font scale", overlay.font_scale)
+                        print("line thickness", overlay.line_thickness)
                         cv2.rectangle(image, (int(x0), int(y0)), (int(x1), int(y1)), (0, 255, 0), 1)
                         pyplot.imshow(image)
                         pyplot.show()
@@ -239,11 +250,9 @@ class DetectionDatasetGenerator:
             except IOError as exc:
                 if exc.errno != errno.EISDIR:
                     raise
-            file_index += 1
 
         # preserve percentage of samples for each class ("stratified")
         self.OUTPUT.sort(key=lambda tup: tup[-1])
-
         lengths = []
         i = 0
         last = 0
