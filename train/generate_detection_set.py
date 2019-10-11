@@ -212,8 +212,8 @@ class DetectionDatasetGenerator:
                     # using first x,y and concated heights and max(width) write bounding boxes
                     x0 = overlay_x - self.overlay_padding
                     x1 = overlay_x + overlay.width + self.overlay_padding
-                    y0 = overlay_y + overlay.height + overlay.text_height['time_code']
-                    y1 = overlay_y
+                    y0 = overlay_y - overlay.text_height['time_code']
+                    y1 = overlay_y + overlay.height
                     print(x0, x1, y0, y1)
                     # --------------------------------------------------------------------
                     img_file_name = video_file_name + "_sample%d.jpg" % image_index
