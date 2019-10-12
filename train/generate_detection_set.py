@@ -2,19 +2,11 @@ import skvideo.io
 import cv2
 import os
 import csv
-import glob
 import numpy
 import errno
 import json
 from matplotlib import pyplot
 from random import randint, choice, uniform
-TEXT_FOLDER = 'recognition_dataset'
-DETECTION_FOLDER = "detection_dataset"
-TRAIN_OUTPUT_FILE = os.path.join("detection_dataset", "train.csv")
-VALIDATION_OUTPUT_FILE = os.path.join("detection_dataset", "validation.csv")
-SPLIT_RATIO = 0.8
-COLOR_SET = [(0, 0, 0), (230, 230, 230)]
-FONT_SET = [0, 1, 2, 3, 4, 5, 6, 7, 16]
 
 
 class OverLay:
@@ -28,17 +20,19 @@ class OverLay:
         self.text_height = dict()
         self.width = 0
         self.height = 0
+        self.x = 0
+        self.y = 0
+        self.padding = 15
         # Set text characteristics
-        self.font = choice(FONT_SET)
+        self.font = choice(self.FONT_SET)
         self.font_scale = round(uniform(1, 1.5), 1)
-        self.font_color = choice(COLOR_SET)
+        self.font_color = choice(self.COLOR_SET)
         self.line_thickness = 2
         # Save text values
         self.text['time_code'] = time_code
         self.text['date'] = date
         self.text['speed'] = speed
         self.text['camera'] = camera
-        #
 
         for key in self.text:
             self.text_width[key] = cv2.getTextSize(self.text[key],
@@ -48,6 +42,41 @@ class OverLay:
             self.height += self.text_height[key]
         self.width = self.text_width[max(self.text_width, key=lambda key: self.text_width[key])]
 
+    def put_overlay_to_image(self, image):
+        """ Method which computes coordinates of overlay, and pu overlay on image
+        :param image: numpy.array
+        :return: int, int, numpy.array
+        """
+        assert isinstance(image, numpy.ndarray)
+        image_width = image.shape[1]
+        image_height = image.shape[0]
+        self.x = randint(10, int(image_width - self.width))
+        self.y = randint(int(self.height + 5), int(image_height - self.height))
+
+        i = 0
+        for key in self.text:
+            gap = self.text_height[key] + 5
+            x = self.x
+            y = self.y + i * gap
+            cv2.putText(image, self.text[key], (x, y),
+                        self.font,
+                        self.font_scale,
+                        self.font_color,
+                        self.line_thickness,
+                        lineType=cv2.LINE_AA)
+            i += 1
+        return image
+
+    def compute_bounding_box_coordinates(self):
+        """ Calculate bounding boxes coordinates for neural network education
+        :return: int, int, int, int
+        """
+        x0 = self.x - self.padding
+        x1 = self.x + self.width + self.padding
+        y0 = self.y - self.text_height['time_code'] - self.padding
+        y1 = self.y + self.height + self.padding
+        return x0, x1, y0, y1
+
 
 class DetectionDatasetGenerator:
     TEXT_FOLDER = 'recognition_dataset'
@@ -56,7 +85,6 @@ class DetectionDatasetGenerator:
     VALIDATION_OUTPUT_FILE = os.path.join("detection_dataset", "validation.csv")
     SPLIT_RATIO = 0.8
     TEXT = dict()
-    COLOR_SET = [(0, 0, 0), (230, 230, 230)]
     FONT_SET = [0, 1, 2, 3, 4, 5, 6, 7, 16]
     OUTPUT = []
 
@@ -69,18 +97,16 @@ class DetectionDatasetGenerator:
         with open(os.path.join('configuration', 'recognition.json'), 'r') as config:
             self.configuration = json.load(config)
 
-        with open(os.path.join(TEXT_FOLDER, self.configuration['TIME_CODE_FILE']), 'r') as file:
+        with open(os.path.join(self.TEXT_FOLDER, self.configuration['TIME_CODE_FILE']), 'r') as file:
             self.TEXT['time_code_lines'] = [x.rstrip("\n") for x in file.readlines()]
-        with open(os.path.join(TEXT_FOLDER, self.configuration['DATE_FILE']), 'r') as file:
+        with open(os.path.join(self.TEXT_FOLDER, self.configuration['DATE_FILE']), 'r') as file:
             self.TEXT['date_lines'] = [x.rstrip("\n") for x in file.readlines()]
         # with open(os.path.join(TEXT_FOLDER, self.configuration['DAY_WEEK_FILE']), 'r') as file:
         #     self.day_week_lines = file.readlines()
-        with open(os.path.join(TEXT_FOLDER, self.configuration['SPEED_FILE']), 'r') as file:
+        with open(os.path.join(self.TEXT_FOLDER, self.configuration['SPEED_FILE']), 'r') as file:
             self.TEXT['speed_lines'] = [x.rstrip("\n") for x in file.readlines()]
-        with open(os.path.join(TEXT_FOLDER, self.configuration['CAMERA_FILE']), 'r') as file:
+        with open(os.path.join(self.TEXT_FOLDER, self.configuration['CAMERA_FILE']), 'r') as file:
             self.TEXT['camera_lines'] = [x.rstrip("\n") for x in file.readlines()]
-        print(choice(list(self.TEXT.keys())))
-        print(choice(self.TEXT[choice(list(self.TEXT.keys()))]))
 
     @staticmethod
     def video_files(path):
@@ -140,7 +166,6 @@ class DetectionDatasetGenerator:
             pass
         return rotate_angle
 
-
     @staticmethod
     def read_file(file_name):
         """
@@ -150,109 +175,11 @@ class DetectionDatasetGenerator:
             for line in fread:
                 yield line
 
-    @staticmethod
-    def compute_overlay_coordinates(image, overlay):
+    def save_metadata_to_csv(self):
+        """Save all otuput data to train and validation csv file
+        (image_path, height, width, [xmin, ymin, xmax, ymax] , class_name, class_id)
+        :return:
         """
-        Function for computing coordinates of overlay by overlay parameters such
-        text, font, font_scale, line_thickness
-        :param image: numpy.ndarray`
-        :param overlay: class OverLay
-        :return: (int, int)
-        """
-
-        # assert isinstance(overlay, OverLay)
-        # assert isinstance(image, numpy.ndarray)
-        image_width = image.shape[1]
-        image_height = image.shape[0]
-        overlay_x = randint(10, int(image_width - overlay.width))
-        overlay_y = randint(int(overlay.height + 5), int(image_height - overlay.height))
-        return overlay_x, overlay_y
-
-    def generate_images(self, images_dir=None, debug=False):
-        for video_file_name in self.video_files(os.path.join(self.DETECTION_FOLDER, self.video_folder)):
-            file = os.path.join(
-                self.DETECTION_FOLDER,
-                self.video_folder,
-                video_file_name)
-
-            try:
-                image_index = 0
-                rotate_angle = self.get_video_rotation(file)
-                vidcap = cv2.VideoCapture(file)
-                success = True
-                while success:
-                    # take frame from video
-                    success, image = vidcap.read()
-                    if image_index == self.images_per_video:
-                        success = False
-                    # Rotate image if we've got .mov file
-                    image = self.rotate_image(image, 360 - rotate_angle)
-                    # set random settings for overlay and random text from dictionary
-                    overlay = OverLay(choice(self.TEXT['time_code_lines']),
-                                      choice(self.TEXT['date_lines']), 
-                                      choice(self.TEXT['speed_lines']), 
-                                      choice(self.TEXT['camera_lines']))
-
-                    overlay_x, overlay_y = self.compute_overlay_coordinates(image, overlay)
-
-                    # draw txts as a pie
-                    i = 0
-                    for key in overlay.text:
-                        gap = overlay.text_height[key] + 5
-                        y = overlay_y + i * gap
-                        x = overlay_x  # for center alignment => int((img.shape[1] - textsize[0]) / 2)
-                        cv2.putText(image, overlay.text[key], (x, y),
-                                    overlay.font,
-                                    overlay.font_scale,
-                                    overlay.font_color,
-                                    overlay.line_thickness,
-                                    lineType=cv2.LINE_AA)
-                        i += 1
-
-                    # using first x,y and concated heights and max(width) write bounding boxes
-                    x0 = overlay_x - self.overlay_padding
-                    x1 = overlay_x + overlay.width + self.overlay_padding
-                    y0 = overlay_y - overlay.text_height['time_code']
-                    y1 = overlay_y + overlay.height
-                    print(x0, x1, y0, y1)
-                    # --------------------------------------------------------------------
-                    img_file_name = video_file_name + "_sample%d.jpg" % image_index
-                    cv2.imwrite(os.path.join(images_dir, img_file_name), image)
-
-                    # Set class marks
-                    image_index += 1
-                    if overlay.font_color == (0, 0, 0):
-                        class_name = 'black'
-                        class_target = 2
-                    if overlay.font_color == (230, 230, 230):
-                        class_name = 'white'
-                        class_target = 0
-
-                    self.OUTPUT.append((os.path.join(images_dir, img_file_name),
-                                   image.shape[0], image.shape[1],
-                                   x0, y0, x1, y1,
-                                   class_name, class_target))
-
-                    if debug:
-                        print("font:", overlay.font)
-                        print("font-color", overlay.font_color)
-                        print("font scale", overlay.font_scale)
-                        print("line thickness", overlay.line_thickness)
-                        # cv2.rectangle(image, (int(x0), int(y0)), (int(x1), int(y1)), (0, 255, 255), 3)
-                        cv2.rectangle(image, (int(x0), int(y0)), (int(x0+ 10), int(y0+ 10)),
-                                      (0, 255, 255), 5)
-                        cv2.rectangle(image, (int(x1), int(y1)), (int(x1 + 10), int(y1 + 10)),
-                                      (0, 255, 0), 5)
-
-                        pyplot.imshow(image)
-                        pyplot.show()
-                        if image_index > 4:
-                            success = False
-                            break
-            except IOError as exc:
-                if exc.errno != errno.EISDIR:
-                    raise
-
         # preserve percentage of samples for each class ("stratified")
         self.OUTPUT.sort(key=lambda tup: tup[-1])
         lengths = []
@@ -270,7 +197,8 @@ class DetectionDatasetGenerator:
         # print("class {}: {} images".format(output[j - 1][-2], i))
         lengths.append(i)
 
-        with open(TRAIN_OUTPUT_FILE, "w", newline='') as train, open(VALIDATION_OUTPUT_FILE, "w", newline='') as validate:
+        with open(self.TRAIN_OUTPUT_FILE, "w", newline='') as train, open(self.VALIDATION_OUTPUT_FILE, "w",
+                                                                          newline='') as validate:
             writer = csv.writer(train, delimiter=",")
             writer2 = csv.writer(validate, delimiter=",")
             s = 0
@@ -281,16 +209,110 @@ class DetectionDatasetGenerator:
                     path, height, width, xmin, ymin, xmax, ymax, class_name, class_id = self.OUTPUT[s]
 
                     row = [path, height, width, xmin, ymin, xmax, ymax, class_name, class_id]
-                    if i <= c * SPLIT_RATIO:
+                    if i <= c * self.SPLIT_RATIO:
                         writer.writerow(row)
                     else:
                         writer2.writerow(row)
                     s += 1
         print("\nDone!")
 
+    def generate_images(self, images_dir=None, debug=False):
+        for video_file_name in self.video_files(os.path.join(self.DETECTION_FOLDER, self.video_folder)):
+            file = os.path.join(
+                self.DETECTION_FOLDER, self.video_folder, video_file_name)
+            try:
+                image_index = 0
+                rotate_angle = self.get_video_rotation(file)
+                vidcap = cv2.VideoCapture(file)
+                success = True
+                while success:
+                    # take frame from video and prepare image
+                    success, image = vidcap.read()
+                    if image_index == self.images_per_video:
+                        success = False
+                    # Rotate image if we've got .mov file
+                    image = self.rotate_image(image, 360 - rotate_angle)
+                    # Set random settings for overlay and random text from dictionary
+                    overlay = OverLay(choice(self.TEXT['time_code_lines']),
+                                      choice(self.TEXT['date_lines']), 
+                                      choice(self.TEXT['speed_lines']), 
+                                      choice(self.TEXT['camera_lines']))
+                    # Get updated image
+                    image = overlay.put_overlay_to_image(image)
+                    # Get Bounding box coordinates
+                    x0, x1, y0, y1 = overlay.compute_bounding_box_coordinates()
+                    # Write image inside into folder
+                    img_file_name = video_file_name + "_sample%d.jpg" % image_index
+                    cv2.imwrite(os.path.join(images_dir, img_file_name), image)
+
+                    # Set class marks
+                    if overlay.font_color == (0, 0, 0):
+                        class_name = 'black'
+                        class_target = 1
+                    if overlay.font_color == (230, 230, 230):
+                        class_name = 'white'
+                        class_target = 0
+
+                    image_index += 1
+                    self.OUTPUT.append((os.path.join(images_dir, img_file_name),
+                                        image.shape[0], image.shape[1],
+                                        x0, y0, x1, y1,
+                                        class_name, class_target))
+
+                    if debug:
+                        print("font:", overlay.font)
+                        print("font-color", overlay.font_color)
+                        print("font scale", overlay.font_scale)
+                        print("line thickness", overlay.line_thickness)
+                        cv2.rectangle(image, (int(x0), int(y0)), (int(x0+ 10), int(y0+ 10)),
+                                      (0, 255, 255), 5)
+                        cv2.rectangle(image, (int(x1), int(y1)), (int(x1 + 10), int(y1 + 10)),
+                                      (0, 255, 0), 5)
+
+                        pyplot.imshow(image)
+                        pyplot.show()
+                        success = False
+            except IOError as exc:
+                if exc.errno != errno.EISDIR:
+                    raise
+        self.save_metadata_to_csv()
+        # # preserve percentage of samples for each class ("stratified")
+        # self.OUTPUT.sort(key=lambda tup: tup[-1])
+        # lengths = []
+        # i = 0
+        # last = 0
+        # for j, row in enumerate(self.OUTPUT):
+        #     if last == row[-1]:
+        #         i += 1
+        #     else:
+        #         print("class {}: {} images".format(self.OUTPUT[j - 1][-2], i))
+        #         lengths.append(i)
+        #         i = 1
+        #         last += 1
+        #
+        # # print("class {}: {} images".format(output[j - 1][-2], i))
+        # lengths.append(i)
+        #
+        # with open(self.TRAIN_OUTPUT_FILE, "w", newline='') as train, open(self.VALIDATION_OUTPUT_FILE, "w", newline='') as validate:
+        #     writer = csv.writer(train, delimiter=",")
+        #     writer2 = csv.writer(validate, delimiter=",")
+        #     s = 0
+        #     for c in lengths:
+        #         for i in range(c):
+        #             print("{}/{}".format(s + 1, sum(lengths)), end="\r")
+        #
+        #             path, height, width, xmin, ymin, xmax, ymax, class_name, class_id = self.OUTPUT[s]
+        #
+        #             row = [path, height, width, xmin, ymin, xmax, ymax, class_name, class_id]
+        #             if i <= c * self.SPLIT_RATIO:
+        #                 writer.writerow(row)
+        #             else:
+        #                 writer2.writerow(row)
+        #             s += 1
+        # print("\nDone!")
+
 
 if __name__ == '__main__':
-    # create images directory
     dirName = os.path.join("detection_dataset", "image_set")
     if not os.path.exists(dirName):
         os.mkdir(dirName)
@@ -298,9 +320,6 @@ if __name__ == '__main__':
     else:
         print("Dataset directory:", dirName, " already exists")
 
-    generator = DetectionDatasetGenerator(video_folder="videos")
-    generator.generate_images(images_dir=dirName, debug=True)
+    generator = DetectionDatasetGenerator(video_folder="videos", images_per_video=30, max_objects_on_image=3)
+    generator.generate_images(images_dir=dirName, debug=False)
     print("generate complete successful")
-
-# Go to frame
-# vidcap.set(cv2.CAP_PROP_POS_MSEC, (image_index * 1000))  # added this line
