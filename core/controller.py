@@ -8,12 +8,13 @@ from core.patterns.singleton import Singleton
 from core.models.MobileNetDetector import MobileNetV2Detector
 from core.models.ConvRNNRecognizer import ConvRNNRecognitionModel
 from keras.applications.mobilenet_v2 import preprocess_input
+from matplotlib import pyplot
 
 
 class TimeCodeController(metaclass=Singleton):
 
     def __init__(self):
-
+        # TODO cross platforms concatenation
         with open('configuration/recognition.json', 'r') as f:
             self.recognition_model_conf = json.load(f)
 
@@ -55,8 +56,9 @@ class TimeCodeController(metaclass=Singleton):
                 success, image = vidcap.read()
                 cv2.imwrite(os.path.join(self.IMAGE_FOLDER, video_filename + str(count) + '.jpg'), image)
                 time_code_crops = self.image_detection(image)
-
                 for time_code in time_code_crops:
+                    pyplot.imshow(time_code)
+                    pyplot.show()
                     crop_file_name = video_filename + str(count) + '.jpg'
                     cv2.imwrite(os.path.join(self.IMAGE_FOLDER, crop_file_name), time_code)
                     predictions[crop_file_name] = self.crop_recognition(time_code)

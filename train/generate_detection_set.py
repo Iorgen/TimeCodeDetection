@@ -320,6 +320,6 @@ if __name__ == '__main__':
     else:
         print("Dataset directory:", dirName, " already exists")
 
-    generator = DetectionDatasetGenerator(video_folder="videos", images_per_video=30, max_objects_on_image=3)
+    generator = DetectionDatasetGenerator(video_folder="videos", images_per_video=5, max_objects_on_image=3)
     generator.generate_images(images_dir=dirName, debug=False)
     print("generate complete successful")

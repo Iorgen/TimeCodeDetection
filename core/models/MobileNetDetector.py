@@ -17,10 +17,10 @@ sys.path.append(sys.path[0] + "/..")
 
 
 class MobileNetV2Detector():
-    # Default initialization
+    # MobileNetV2 Hyper Parameters configuration
     ALPHA = 0.35
-
     GRID_SIZE = 14
+
     # Input parameters configuration
     IMAGE_SIZE = 448
     IMAGE_HEIGHT = 360
@@ -100,16 +100,11 @@ class MobileNetV2Detector():
             layer.trainable = trainable
 
         block = model.get_layer("block_16_project_BN").output
-        print(block)
         x = Conv2D(112, padding="same", kernel_size=3, strides=1, activation="relu")(block)
         x = Conv2D(112, padding="same", kernel_size=3, strides=1, use_bias=False)(x)
         x = BatchNormalization()(x)
         x = Activation("relu")(x)
         x = Conv2D(5, padding="same", kernel_size=1, activation="sigmoid")(x)
-
-        print(model.input)
-        print(x)
-        print(model)
         model = Model(inputs=model.input, outputs=x)
         print(model)
         # divide by 2 since d/dweight learning_rate * weight^2 = 2 * learning_rate * weight
